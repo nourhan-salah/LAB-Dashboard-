@@ -4,7 +4,7 @@
 // ============================================================================
 
 const NS_APP_CONFIG = {
-  instapayAddress: "nourhansalah@instapay", // ضعي عنوان InstaPay الخاص بك هنا
+  instapayAddress: "nourhansalahmahmoud@instapay", // ضعي عنوان InstaPay الخاص بك هنا
   whatsappNumber: "201208459828",           // رقم الواتساب لاستلام بصمة ونوع الجهاز
   trialDays: 30,                            // مدة التجربة المجانية بالأيام (تقل تلقائياً كل يوم حتى 0 ثم يغلق البرنامج)
   secretSalt: "NOURHAN_SALAH_LAB_2026",     // مفتاح التشفير الخاص بك
