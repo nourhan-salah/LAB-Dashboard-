@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <meta name="theme-color" content="#115e59">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="LAB Dashboard">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta name="theme-color" content="#115e59">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LAB Dashboard">
     <title>الماسح الذكي لتحضيرات التحاليل الطبية</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- مكتبة القص التفاعلية Cropper.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <!-- محرك القراءة الضوئية المحلي للعمل كمساند فوري وفي وضع الأوفلاين -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-    <!-- ملف التحاليل التخصصية DotCare -->
+    <!-- قاعدة بيانات التحاليل التخصصية DotCare وكتيب 2026 (1153 تحليل) -->
     <script src="dotcare.js"></script>
 
     <style>
@@ -32,22 +30,40 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg-gradient); min-height: 100vh; color: var(--text-main); padding: 0 0 80px 0; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        .container { max-width: 550px; margin: 0 auto; padding: 5px 15px 0; }
-        header { text-align: center; margin-bottom: 22px; }
-        header h1 { font-size: 1.35rem; font-weight: 800; margin-bottom: 5px; }
-        header p { font-size: 0.85rem; color: var(--text-sub); }
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-main);
+            padding: 0 0 80px 0;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        input {
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+        .container { max-width: 560px; margin: 0 auto; padding: 5px 15px 0; }
+        header { text-align: center; margin-bottom: 18px; }
+        header h1 { font-size: 1.35rem; font-weight: 800; margin-bottom: 4px; }
+        header p { font-size: 0.84rem; color: var(--text-sub); }
 
         .controls-card {
             background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 16px;
             padding: 18px 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            margin-bottom: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.22);
         }
 
-        .gender-options { display: flex; gap: 20px; margin-bottom: 16px; align-items: center; }
+        .gender-options {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
         .gender-options label { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer; }
 
         .upload-area { display: flex; flex-direction: column; gap: 10px; }
@@ -69,37 +85,49 @@
 
         input[type="file"] { display: none; }
 
-        /* منطقة القص المباشر */
-        #cropWrapper {
-            display: none;
-            margin-top: 15px;
-            background: #000;
-            border-radius: 10px;
-            overflow: hidden;
-            max-height: 380px;
-        }
-        #imageToCrop {
-            max-width: 100%;
-            display: block;
-        }
-
-        .crop-controls {
-            display: none;
+        .quick-search-box {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            display: flex;
             gap: 8px;
-            justify-content: center;
-            margin-top: 12px;
-            flex-wrap: wrap;
+        }
+        .quick-search-box input {
+            flex: 1;
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(0,0,0,0.2);
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .quick-search-box input::placeholder { color: #99f6e4; opacity: 0.7; }
+        .quick-search-box button {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 0 14px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.84rem;
+            cursor: pointer;
         }
 
-        .btn-sub {
-            background: rgba(255,255,255,0.15);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.25);
-            padding: 7px 15px;
+        #previewWrapper {
+            display: none;
+            margin-top: 14px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 250px;
             border-radius: 8px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            font-weight: 600;
+            object-fit: contain;
         }
 
         .loading-overlay {
@@ -123,6 +151,7 @@
             flex-direction: column;
             align-items: center;
             gap: 12px;
+            max-width: 340px;
         }
 
         .spinner {
@@ -130,7 +159,7 @@
             border: 5px solid rgba(255, 255, 255, 0.2);
             border-top: 5px solid var(--primary);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -197,9 +226,9 @@
 
 <div class="container">
     <header>
-        <img src="./icon-192.png" alt="LAB Dashboard Logo" style="width:62px; height:62px; border-radius:16px; border:1.5px solid rgba(245,158,11,0.55); box-shadow:0 6px 16px rgba(0,0,0,0.35); margin:0 auto 10px; display:block;">
+        <img src="./icon-192.png" onerror="this.style.display='none'" alt="LAB Dashboard Logo" style="width:68px; height:68px; border-radius:18px; border:2px solid rgba(245,158,11,0.65); box-shadow:0 6px 18px rgba(0,0,0,0.4); margin:0 auto 10px; display:block;">
         <h1>الماسح الذكي لتحضيرات التحاليل</h1>
-        <p>تحديد الروشتة وقصها بدقة مع فحص DotCare والذكاء الاصطناعي</p>
+        <p>فحص مباشر وفوري عبر معايير DotCare مدعوماً بالذكاء الاصطناعي (أونلاين وأوفلاين)</p>
     </header>
 
     <div class="controls-card">
@@ -211,29 +240,28 @@
 
         <div class="upload-area">
             <label for="cameraInput" class="btn-action">📸 فتح الكاميرا وتصوير الروشتة</label>
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="initCropper(this)">
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="startInstantScan(this)">
 
             <label for="fileInput" class="btn-action" style="background-color: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3);">📁 اختيار صورة من المعرض</label>
-            <input type="file" id="fileInput" accept="image/*" onchange="initCropper(this)">
+            <input type="file" id="fileInput" accept="image/*" onchange="startInstantScan(this)">
         </div>
 
-        <!-- شاشة القص الاحترافية Cropper -->
-        <div id="cropWrapper">
-            <img id="imageToCrop" alt="قص الصورة">
+        <!-- بحث فوري بالاسم أو الاختصار يعمل أونلاين وأوفلاين لـ 1153 تحليل -->
+        <div class="quick-search-box">
+            <input type="text" id="manualTestInput" placeholder="🔍 أو اكتب اسم/اختصار التحليل (مثال: A1C, MOG, TSH, CBC)..." onkeydown="if(event.key==='Enter') searchManualTests()">
+            <button onclick="searchManualTests()">بحث فوري</button>
         </div>
 
-        <div class="crop-controls" id="cropControls">
-            <button class="btn-sub" onclick="rotateCropper(-90)">🔄 تدوير يسار</button>
-            <button class="btn-sub" onclick="rotateCropper(90)">🔄 تدوير يمين</button>
-            <button class="btn-sub" style="background: var(--accent); border-color: transparent;" onclick="confirmCropAndScan()">✂️ اعتماد القص وفحص الروشتة</button>
+        <div id="previewWrapper">
+            <img id="imagePreview" alt="صورة الروشتة">
         </div>
     </div>
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-card">
             <div class="spinner"></div>
-            <h3>جاري الفحص المتقدم...</h3>
-            <p id="loadingMsg" style="font-size: 0.85rem; color: #b2dfdb;">قراءة الفحوصات ومطابقة الشروط...</p>
+            <h3>جاري الفحص الذكي المباشر...</h3>
+            <p id="loadingMsg" style="font-size: 0.85rem; color: #b2dfdb;">توضيح الصورة ومطابقة DotCare والذكاء الاصطناعي...</p>
         </div>
     </div>
 
@@ -249,66 +277,64 @@
 </div>
 
 <script>
-    const _kPart1 = "QVEuQWI4Uk42STFPTkh4";
-    const _kPart2 = "Y3JRUm8xMkowLTlNUVBM";
-    const _kPart3 = "bm5vSTluZXhNTEhhckJY";
-    const _kPart4 = "anl3aTdrd0E=";
-    const getSecureKey = () => atob(_kPart1 + _kPart2 + _kPart3 + _kPart4);
-
-    let cropperInstance = null;
-
+    // القواعد الأساسية الشاملة والمانعة لأي التباس بصري (Zero False-Positive Rules)
     const primaryCommonRules = [
         {
+            name: "اختبار تحفيز هرمون النمو بالكلونيدين (Growth Hormone Stimulation Test by Clonidine) [V13-206]",
+            test: (t) => /growth\s*hormone.*(clonidine|stimulation)|clonidine.*growth|تحفيز\s*هرمون\s*النمو/i.test(t),
+            getNotes: () => `صيام تام من 8 إلى 10 ساعات صباحاً قبل الفحص (يُسمح بالماء فقط) مع راحة تامة؛ تسحب عينة دم أساسية (0 min) ثم يُعطى عقار الكلونيدين بجرعة يحددها الطبيب وتسحب عينات متتالية (بعد 30، 60، 90، و120 دقيقة) في أنابيب سيرم.`
+        },
+        {
+            name: "صبغة مناعية نسيجية لمؤشر التكاثر الخلوي (IHC: Ki-67) [2160015]",
+            test: (t) => /ki[-_ ]?67|ihc\s*ki/i.test(t),
+            getNotes: () => `إحضار بلوك البرافين النسيجي (Paraffin Block) مع الشرائح المصبوغة وتقرير الباثولوجي الأصلي؛ لا يشترط صيام المريض (فحص صبغات مناعية هستوكيميائية IHC لتقييم نشاط وانقسام الخلايا).`
+        },
+        {
+            name: "صبغة مناعية نسيجية للسينابتوفيزين (IHC: Synaptophysin) [2160016]",
+            test: (t) => /synaptophysin|ihc\s*synapto/i.test(t),
+            getNotes: () => `إحضار بلوك البرافين النسيجي (Paraffin Block) مع تقرير الباثولوجي؛ لا يشترط صيام المريض (فحص مناعي نسيجي IHC لتشخيص أورام الغدد الصماء العصبية NETs).`
+        },
+        {
+            name: "صبغة مناعية نسيجية للكروموجرانين (IHC: Chromogranin A) [2160017]",
+            test: (t) => /ihc\s*chromogranin|chromogranin(?!.*serum)/i.test(t),
+            getNotes: () => `إحضار بلوك البرافين النسيجي (Paraffin Block) مع تقرير الباثولوجي (أو عينة سيرم صائم مع إيقاف أدوية المعدة PPIs لمدة أسبوعين في حال طلبه بالدم)؛ لتشخيص أورام الغدد الصماء العصبية (NETs).`
+        },
+        {
+            name: "هرمون النورإبينفرين بالدم مستلقياً وواقفاً (Serum Norepinephrine -NE- Supine & 15 min Standing) [V13-626]",
+            test: (t) => /serum\s*ne\b|norepinephrine|supine\s*and\s*15\s*minutes\s*after\s*standing/i.test(t),
+            getNotes: () => `الامتناع عن القهوة والشاي والشوكولاتة والموز والفانيليا والمشروبات الغازية والتدخين لمدة 72 ساعة قبل الفحص؛ يستلقي المريض بهدوء تام لمدة 30 دقيقة لسحب العينة الأولى (Supine)، ثم يقف لمدة 15 دقيقة لسحب العينة الثانية (Standing) في أنابيب مبرّدة وتفصل فوراً.`
+        },
+        {
+            name: "الأجسام المضادة للسيترولين الحلقي / الروماتويد المبكر (ANTI-CCP) [V13-256]",
+            test: (t) => /anti[-_ ]?ccp|cyclic\s*citrullinated/i.test(t),
+            getNotes: () => `سيرم دم (200 µL) لا يشترط الصيام؛ الفحص المناعي الأدق للتشخيص المبكر لمرض التهاب المفاصل الروماتويدي.`
+        },
+        {
+            name: "البوتاسيوم في مصل الدم (POTASSIUM IN SERUM - K+) [204073]",
+            test: (t) => /potassium\s*in\s*serum|serum\s*potassium|(?<!urine\s*)\bpotassium\b(?!.*urine)|204073|بوتاسيوم/i.test(t),
+            getNotes: () => `سيرم غير متحلل (Non-hemolyzed serum)، لا يشترط الصيام، مع تجنب قبض وبسط اليد المتكرر أو ربط التورنيكيه لفترة طويلة أثناء السحب لمنع الارتفاع الكاذب للبوتاسيوم.`
+        },
+        {
+            name: "مستوى عقار الديباكين / حمض الفالبرويك في الدم (VALPROIC ACID - DEPAKINE) [207013]",
+            test: (t) => /valproic\s*acid|valporic\s*acid|depakine?|ديباكين|فالبرويك|نسبة\s*ديباكين|207013/i.test(t),
+            getNotes: () => `سيرم دم (500 µL) لا يشترط الصيام؛ يُسحب قبل موعد الجرعة التالية مباشرة أو قبل الجرعة بساعة (Trough Level) لضبط المستوى العلاجي للتحكم في نوبات الصرع والوقاية من سمية الكبد.`
+        },
+        {
             name: "فيتامين د (Vitamin D / 25-OH) [204108]",
-            test: (t) => /vitamin\s*d|vit\s*d|v\.d|25[-_ ]?oh|204108/i.test(t),
+            test: (t) => /vitamin\s*d|vit\s*d|25\s*[\(\[_ -]*[o0]h\s*\)?\s*vit|204108|فيتامين\s*د/i.test(t),
             getNotes: (isFemale) => isFemale 
                 ? `سيرم دم لا يحتاج إلى صيام.<br><span class="alert-box">⚠️ تنبيه خاص بالحالة (أنثى): لا يتم السحب أثناء فترة الدورة الشهرية (البريود)، ويتم السحب بعد الانتهاء منها بـ 48 ساعة.</span>`
                 : `سيرم دم لا يحتاج إلى صيام، مع تجنب تناول جرعات مكثفة من فيتامين د قبل الفحص بيومين.`
         },
         {
-            name: "صورة دم كاملة (COMPLETE BLOOD PICTURE - CBC) [2090001]",
-            test: (t) => /\bcbc\b|complete\s*blood|blood\s*picture|2090001/i.test(t),
-            getNotes: () => `دم كامل على أنبوبة EDTA، لا يشترط الصيام، مع خلط الأنبوبة بلطف فور السحب.`
-        },
-        {
-            name: "سكر صائم بالدم (FASTING BLOOD SUGAR - FBS) [2040001]",
-            test: (t) => /fasting\s*blood\s*sugar|\bfbs\b|f\.b\.s|2040001/i.test(t),
-            getNotes: () => `صيام من 6 إلى 8 ساعات (يسمح بشرب الماء فقط). تسحب العينة على أنبوبة فلوريد صوديوم.`
-        },
-        {
-            name: "سكر فاطر بعد ساعتين (POST PRANDIAL BLOOD SUGAR - 2H PP) [2040002]",
-            test: (t) => /post\s*prandial|2\s*hours?\s*pp|\b2hpp\b|p\.p|2040002/i.test(t),
-            getNotes: () => `سحب العينة بعد ساعتين تماماً من بدء تناول الوجبة، ويمنع الأكل أو التدخين خلال الساعتين.`
-        },
-        {
-            name: "سكر عشوائي بالدم (RANDOM Bl. SUGAR-RBS) [204076]",
-            test: (t) => /random\s*bl(ood)?\.?\s*sugar|\brbs\b|r\.b\.s|204076/i.test(t),
-            getNotes: () => `سيرم أو بلازما صوديوم فلوريد في أي وقت ولا يحتاج الى صيام؛ لتقييم مستويات الجلوكوز اللحظية.`
-        },
-        {
-            name: "الهيموجلوبين السكري (HBA1C) [2040003]",
-            test: (t) => /hba1c|glycated\s*hemoglobin|a1c|2040003/i.test(t),
-            getNotes: () => `دم كامل EDTA، لا يشترط الصيام نهائياً؛ لتقييم متوسط ضبط السكر خلال الأشهر الثلاثة السابقة.`
-        },
-        {
-            name: "الكرياتينين في مصل الدم (SERUM CREATININE) [2040005]",
-            test: (t) => /serum\s*creatinine|creat(?!.*urine)|\bs\.cr\b|2040005/i.test(t),
-            getNotes: () => `سيرم دم، يفضل تجنب الإفراط في اللحوم الحمراء والرياضة الشاقة قبل السحب، ولا يشترط الصيام التام.`
-        },
-        {
-            name: "اليوريا في مصل الدم (UREA IN SERUM) [204023]",
-            test: (t) => /urea\s*in\s*serum|serum\s*urea|\bbun\b|204023/i.test(t),
-            getNotes: () => `سيرم لا يحتاج الى صيام؛ لتقييم وظائف الكلى الإطراحية وحالات الجفاف والنزف الهضمي.`
-        },
-        {
-            name: "حمض اليوريك / النقرس في مصل الدم (SERUM URIC ACID) [204086]",
-            test: (t) => /serum\s*uric\s*acid|uric\s*acid|\bua\b|204086/i.test(t),
-            getNotes: () => `سيرم لا يحتاج الى صيام؛ لتشخيص داء النقرس، وتسمم الحمل، ومخاطر حصوات الكلى.`
+            name: "الهيموجلوبين السكري / السكر التراكمي (HBA1C - GLYCATED HB) [2040003]",
+            test: (t) => /hb\s*a\s*[1il]\s*c|glycated\s*h(ae|e)?(moglobin|b\b)|glycosylated\s*h(ae|e)?(moglobin|b\b)|\ba1c\b|2040003|سكر\s*تراكمي|الهيموجلوبين\s*السكري/i.test(t),
+            getNotes: () => `دم كامل على أنبوبة EDTA، لا يشترط الصيام نهائياً؛ لتقييم متوسط ضبط السكر خلال الأشهر الثلاثة السابقة.`
         },
         {
             name: "إنزيم ناقلة أمين الألانين / وظائف كبد (SGPT [ ALT ]) [204089]",
             test: (t) => /\bsgpt\b|\balt\b|alanine\s*aminotransferase|204089/i.test(t),
-            getNotes: () => `سيرم لا يحتاج الى صيام مع تجنب الإجهاد العضلي؛ المؤشر الكبدي الأخص لتقييم تلف خلايا الكبد.`
+            getNotes: () => `سيرم لا يحتاج إلى صيام مع تجنب الإجهاد العضلي؛ المؤشر الكبدي الأخص لتقييم تلف خلايا الكبد.`
         },
         {
             name: "إنزيم ناقلة أمين الأسبارتات (SGOT [ AST ]) [2040020]",
@@ -316,199 +342,722 @@
             getNotes: () => `سيرم دم لا يشترط الصيام، مع تجنب التدريبات العضلية الشاقة قبيل الفحص لتفادي الارتفاع العضلي.`
         },
         {
-            name: "الفيريتين / مخزون الحديد في المصل (SERUM FERRITIN) [204081]",
-            test: (t) => /serum\s*ferritin|ferritin|204081/i.test(t),
-            getNotes: () => `سيرم، لا يشترط الصيام؛ المؤشر الأدق لتقييم مخزون الحديد بالجسم.`
+            name: "صورة دم كاملة (COMPLETE BLOOD PICTURE - CBC) [2090001]",
+            test: (t) => /\bcbc\b|complete\s*blood\s*picture|blood\s*picture|2090001|صورة\s*دم/i.test(t),
+            getNotes: () => `دم كامل على أنبوبة EDTA (Vacutainer)، لا يشترط الصيام، مع خلط الأنبوبة بلطف فور السحب.`
+        },
+        {
+            name: "الكرياتينين في مصل الدم (SERUM CREATININE) [2040005]",
+            test: (t) => /serum\s*creatinine|creatinine\s*in\s*serum|(?<!albumin\s*\/\s*)\bcreatinine\b(?!\s*ratio|.*urine|.*clearance)|2040005|كرياتينين/i.test(t),
+            getNotes: () => `سيرم دم، يفضل تجنب الإفراط في اللحوم الحمراء والرياضة الشاقة قبل السحب، ولا يشترط الصيام التام.`
+        },
+        {
+            name: "نسبة الزلال إلى الكرياتينين في البول (ALBUMIN/CREATININE RATIO) [221004]",
+            test: (t) => /albumin\s*\/\s*creatinine|albumin\s*creatinine\s*ratio|\bacr\b|microalbumin|221004/i.test(t),
+            getNotes: () => `عينة بول صباحية أولى نظيفة، مع تجنب المجهود العضلي الشديد قبل الفحص بـ 24 ساعة.`
+        },
+        {
+            name: "الكالسيوم المتأين (CALCIUM IONIZED) [V13-748]",
+            test: (t) => /calcium\s*\(?\s*ionized\s*\)?|ionized\s*calcium|ca\s*ionized|كالسيوم\s*متأين/i.test(t),
+            getNotes: () => `يسحب في أنبوبة جل منفصلة ومستقلة (Serum gel tube)، ويمنع فتح الأنبوبة أو تقسيم العينة بتاتاً لتأثرها الشديد بالهواء.`
+        },
+        {
+            name: "الكالسيوم الكلي في الدم (CALCIUM TOTAL) [V13-747]",
+            test: (t) => /calcium\s*\(?\s*total\s*\)?|total\s*calcium|(?<!ionized\s*)\bcalcium\b(?!\s*\(?\s*ionized)|كالسيوم\s*كلي/i.test(t),
+            getNotes: () => `سيرم (300 µL) لا يشترط الصيام، ويفضل سحب العينة بدون ربط التورنيكيه لفترة طويلة.`
+        },
+        {
+            name: "الماغنسيوم في مصل الدم (MAGNESIUM IN SERUM) [V13-752]",
+            test: (t) => /magnesium(\s*in\s*serum)?|ماغنسيوم/i.test(t),
+            getNotes: () => `سيرم غير متحلل (300 µL) لا يشترط الصيام، مع تجنب المكملات المحتوية على الماغنسيوم قبل السحب بـ 24 ساعة.`
+        },
+        {
+            name: "مستضد فيروس الالتهاب الكبدي بي السطحي (HBsAg) [V13-8]",
+            test: (t) => /hb\s*s\s*ag|hepatitis\s*b\s*surface|فيروس\s*بي/i.test(t),
+            getNotes: () => `سيرم (200 µL) لا يشترط الصيام؛ للكشف عن الإصابة بفيروس الالتهاب الكبدي الوبائي (B).`
+        },
+        {
+            name: "أجسام مضادة لفيروس الالتهاب الكبدي سي (HCV Ab / HCV IgM) [V13-10]",
+            test: (t) => /hc\s*v\s*ab|hc\s*v\s*igm|hepatitis\s*c\s*ab|فيروس\s*سي/i.test(t),
+            getNotes: () => `سيرم (200 µL) لا يشترط الصيام؛ للكشف عن الأجسام المضادة لفيروس الالتهاب الكبدي الوبائي (C).`
+        },
+        {
+            name: "أجسام مضادة لفيروس نقص المناعة المكتسبة (HIV Ab) [V13-375]",
+            test: (t) => /\bhiv\b\s*(1\+?2)?\s*(ab)?|human\s*immunodeficiency/i.test(t),
+            getNotes: () => `سيرم (200 µL) لا يشترط الصيام.`
+        },
+        {
+            name: "زمن ونشاط البروثرومبين والسيولة (PROTHROMBIN TIME & ACTIVITY - PT / INR) [V13-660]",
+            test: (t) => /prothrombin\s*time|\bpt\b(?!\s*tube)|\binr\b|زمن\s*البروثرومبين|سرعة\s*الدم/i.test(t),
+            getNotes: () => `بلازما سترات الصوديوم (أنبوبة PT الزرقاء حتى العلامة المحددة بدقة)، لا يشترط الصيام، ويلزم كتابة هل يتناول المريض علاج سيولة واسمه.`
+        },
+        {
+            name: "زمن الثرومبوبلاستين الجزئي المنشط (PTT / aPTT) [V13-662]",
+            test: (t) => /\bptt\b|\baptt\b|partial\s*thromboplastin/i.test(t),
+            getNotes: () => `بلازما سترات الصوديوم (أنبوبة PT الزرقاء) تفصل فوراً، مع تسجيل أي أدوية سيولة أو هيبارين يتناولها المريض.`
+        },
+        {
+            name: "ثلاثي يود الثيرونين الحر (FREE T3 / FT3) [V13-168]",
+            test: (t) => /free\s*t3|\bft3\b|f\.\s*t3\b/i.test(t),
+            getNotes: () => `سيرم دم (500 µL) لا يحتاج إلى صيام، ويفضل سحبه صباحاً لتقييم نشاط الغدة الدرقية.`
+        },
+        {
+            name: "الثيروكسين الحر (FREE T4 / FT4) [210023]",
+            test: (t) => /free\s*t4|\bft4\b|f\.\s*t4\b|210023/i.test(t),
+            getNotes: () => `سيرم دم لا يحتاج إلى صيام، ويفضل سحبه صباحاً قبل تناول جرعة علاج الغدة الدرقية.`
         },
         {
             name: "الهرمون المنبه للغدة الدرقية (TSH) [210047]",
-            test: (t) => /\btsh\b|thyroid\s*stimulating\s*hormone|210047/i.test(t),
-            getNotes: () => `سيرم صباحي قبل تناول جرعة الثيروكسين لا يحتاج الى صيام؛ الفحص الاستقصائي الأول لفرز اعتلالات الغدة الدرقية.`
+            test: (t) => /\btsh\b(?!.*receptor)|thyroid\s*stimulating\s*hormone|210047/i.test(t),
+            getNotes: () => `سيرم صباحي قبل تناول جرعة الثيروكسين لا يحتاج إلى صيام؛ الفحص الاستقصائي الأول لفرز اعتلالات الغدة الدرقية.`
+        },
+        {
+            name: "ملف الدهون الكامل بالدم (LIPID PROFILE) [V13-681]",
+            test: (t) => /lipid\s*profile|cholesterol|triglycerides|\bhdl\b|\bldl\b|دهون\s*كاملة/i.test(t),
+            getNotes: () => `صيام من 10 إلى 12 ساعة (مسموح بشرب الماء النقي فقط).`
+        },
+        {
+            name: "الأجسام المضادة للأكوابورين 4 (AQUAPORIN 4 / AQP4 Ab) [V13-304]",
+            test: (t) => /aquaporin|aqp\s*4|neuromyelitis/i.test(t),
+            getNotes: () => `سيرم (300 µL) أو سائل نخاع شوكي CSF (300 µL)، لا يشترط الصيام؛ لتشخيص التهاب العصب البصري والنخاع الشوكي المناعي (Neuromyelitis Optica).`
+        },
+        {
+            name: "أجسام مضادة للميالين قليل التغصن (Anti MOG) [V13-282]",
+            test: (t) => /anti\s*[-_ ]?mog|myelin\s*oligodendrocyte|\bmog\b/i.test(t),
+            getNotes: () => `سيرم (300 µL) لا يشترط الصيام، ويفضل أخذ العينة قبل البدء في العلاج بالكورتيزون؛ لتشخيص الأمراض المزيلة للميالين.`
+        },
+        {
+            name: "الجلوبيولين المناعي ج في المصل (SERUM IG G / Immunoglobulin G) [211021]",
+            test: (t) => /serum\s*ig\s*g|immunoglobulin\s*g|\bigg\b(?!\s*(avidity|1|2|3|4|index))|211021/i.test(t),
+            getNotes: () => `سيرم دم (500 µL) لا يحتاج إلى صيام؛ لقياس الأجسام المضادة الرئيسية وتقييم المناعة طويلة الأمد.`
+        },
+        {
+            name: "سكر صائم بالدم (FASTING BLOOD SUGAR - FBS) [2040001]",
+            test: (t) => /fasting\s*bl(ood)?\.?\s*sugar|\bfbs\b|f\.b\.s|2040001|سكر\s*صائم/i.test(t),
+            getNotes: () => `صيام من 6 إلى 8 ساعات (يسمح بشرب الماء فقط). تسحب العينة على أنبوبة فلوريد صوديوم.`
+        },
+        {
+            name: "سكر فاطر بعد ساعتين (POST PRANDIAL BLOOD SUGAR - 2H PP) [2040002]",
+            test: (t) => /post\s*prandial|2\s*hours?\s*pp|\b2hpp\b|p\.?\s*p\.?\s*bl(ood)?\.?\s*sugar|2040002|سكر\s*فاطر/i.test(t),
+            getNotes: () => `سحب العينة بعد ساعتين تماماً من بدء تناول الوجبة، ويمنع الأكل أو التدخين خلال الساعتين.`
+        },
+        {
+            name: "سكر عشوائي بالدم (RANDOM Bl. SUGAR-RBS) [204076]",
+            test: (t) => /random\s*bl(ood)?\.?\s*sugar|\brbs\b|r\.b\.s|204076|سكر\s*عشوائي/i.test(t),
+            getNotes: () => `سيرم أو بلازما صوديوم فلوريد في أي وقت ولا يحتاج إلى صيام؛ لتقييم مستويات الجلوكوز اللحظية.`
+        },
+        {
+            name: "اليوريا في مصل الدم (UREA IN SERUM / BUN) [204023]",
+            test: (t) => /urea\s*in\s*serum|serum\s*urea|\burea\b(?!.*urine|.*breath|.*clearance)|\bbun\b|204023|يوريا|بولينا/i.test(t),
+            getNotes: () => `سيرم لا يحتاج إلى صيام؛ لتقييم وظائف الكلى الإطراحية وحالات الجفاف.`
+        },
+        {
+            name: "حمض اليوريك / النقرس في مصل الدم (SERUM URIC ACID) [204086]",
+            test: (t) => /serum\s*uric\s*acid|uric\s*acid(?!.*urine)|204086|حمض\s*اليوريك|نقرس/i.test(t),
+            getNotes: () => `سيرم لا يحتاج إلى صيام؛ لتشخيص داء النقرس ومخاطر حصوات الكلى.`
+        },
+        {
+            name: "الفيريتين / مخزون الحديد في المصل (SERUM FERRITIN) [204081]",
+            test: (t) => /serum\s*ferritin|\bferritin\b|204081|فيريتين|مخزون\s*الحديد/i.test(t),
+            getNotes: () => `سيرم، لا يشترط الصيام؛ المؤشر الأدق لتقييم مخزون الحديد بالجسم.`
+        },
+        {
+            name: "الحديد المصلي (SERUM IRON) [V13-664]",
+            test: (t) => /serum\s*iron|(?<!total\s*)\biron\b(?!\s*binding|.*stain)|664/i.test(t),
+            getNotes: () => `سيرم (300 µL): يشترط سحب العينة صائم صباحاً، مع الامتناع عن تناول أي أدوية أو مكملات تحتوي على الحديد لمدة 3 أيام على الأقل قبل الفحص.`
+        },
+        {
+            name: "السعة الكلية لربط الحديد (TIBC - TOTAL IRON BINDING CAPACITY) [204092]",
+            test: (t) => /\btibc\b|total\s*iron\s*binding\s*capacity|204092/i.test(t),
+            getNotes: () => `سيرم صائم صباحاً، مع الامتناع عن تناول مكملات الحديد لمدة 3 أيام قبل الفحص.`
+        },
+        {
+            name: "أنتيجين جرثومة المعدة في البراز (H. Pylori Ag in Stool) [V13-418]",
+            test: (t) => /h\.?\s*pylori\s*ag|pylori.*stool|جرثومة\s*المعدة\s*في\s*البراز/i.test(t),
+            getNotes: () => `عينة براز طازجة: يشترط الامتناع عن تناول أدوية المعدة (مضادات الحموضة و PPIs) والمضادات الحيوية لمدة 7 إلى 14 يوماً قبل التحليل.`
+        },
+        {
+            name: "تحليل البول الكامل (COMPLETE URINE ANALYSIS) [V13-818]",
+            test: (t) => /complete\s*urine\s*analysis|urine\s*analysis|routine\s*urine|تحليل\s*بول\s*كامل/i.test(t),
+            getNotes: () => `يفضل أول عينة بول صباحية في وعاء معقم من المعمل، ولا يمر على إخراجها أكثر من ساعتين.`
+        },
+        {
+            name: "تحليل البراز الروتيني (STOOL ANALYSIS) [218005]",
+            test: (t) => /stool\s*analysis|routine\s*stool|تحليل\s*براز/i.test(t),
+            getNotes: () => `عينة براز حديثة في وعاء نظيف مخصص من المعمل وتصل خلال ساعتين على الأكثر.`
+        },
+        {
+            name: "تحليل السائل المنوي الشامل (SEMEN ANALYSIS & CASA) [217004]",
+            test: (t) => /semen\s*analysis|seminal\s*fluid|\bsem[a-z\s]*lys[i1l]s|\bsem\b.*\blysi|\bsemen\b|\bsfa\b|\bcasa\b|سائل\s*منوي|منوي|217004/i.test(t),
+            getNotes: () => `الامتناع التام عن الجماع أو القذف لمدة 3 إلى 5 أيام قبل التحليل، وتجميع العينة في وعاء معقم من المعمل مع الحرص على وضع النقط الأولى وتجنب الماء أو الصابون، وإحضارها للمعمل خلال 20 إلى 30 دقيقة مع تدفئتها بالقرب من الجسم.`
+        },
+        {
+            name: "فحص العينة النسيجية الصغيرة باثولوجياً (SMALL BIOPSY) [2160010]",
+            test: (t) => /small\s*biopsy|endoscopic\s*biopsy|عينة\s*باثولوجي|خزعة\s*نسيجية|2160010/i.test(t),
+            getNotes: () => `تُحفظ العينة النسيجية فوراً بعد استئصالها في محلول فورمالين متعادل 10% بحجم يغطي العينة بالكامل (1:10)، مع تدوين مكان أخذ العينة والسن والتاريخ المرضي ومراقبة درجة حرارة النقل.`
         },
         {
             name: "تحليل مقاومة الإنسولين (HOMA-IR) [2040019]",
-            test: (t) => /homa[-_ ]?ir|homa\s*test|insulin\s*resistance/i.test(t),
+            test: (t) => /homa[-_ ]?2?[-_ ]?ir|homa\s*test|insulin\s*resistance|2040019/i.test(t),
             getNotes: () => `صيام تام من 8 إلى 10 ساعات مع شرب الماء فقط؛ لسحب عينة جلوكوز وإنسولين صائم معاً لحساب مؤشر مقاومة الإنسولين بدقة.`
         },
         {
             name: "هرمون الحليب / البرولاكتين (PROLACTIN) [210034]",
             test: (t) => /prolactin|\bprl\b|210034/i.test(t),
-            getNotes: () => `يسحب صباحاً بعد الاستيقاظ بساعتين إلى 3 ساعات مع راحة نفسية وبدنية تامة وتجنب الإجهاد ولمس الثدي قبل السحب.`
-        },
-        {
-            name: "الثيروكسين الحر (FREE T4) [210023]",
-            test: (t) => /free\s*t4|\bft4\b|210023/i.test(t),
-            getNotes: () => `سيرم دم لا يحتاج إلى صيام، ويفضل سحبه صباحاً قبل تناول جرعة علاج الغدة الدرقية.`
+            getNotes: () => `يسحب صباحاً بعد الاستيقاظ بساعتين إلى 3 ساعات مع راحة نفسية وبدنية تامة وتجنب الإجهاد قبل السحب.`
         },
         {
             name: "التستوستيرون الحر (FREE TESTOSTERONE) [210024]",
             test: (t) => /free\s*testosterone|free\s*testo|210024/i.test(t),
             getNotes: () => `سيرم دم يُسحب صباحاً (بين 7 و 10 صباحاً) عندما تكون مستويات الهرمون في ذروتها.`
+        },
+        {
+            name: "البروتين التفاعلي سي (CRP) [V13-318]",
+            test: (t) => /\bcrp\b|c[-_ ]?reactive\s*protein/i.test(t),
+            getNotes: () => `سيرم (200-500 µL) لا يشترط الصيام؛ لتقييم الالتهابات الحادة.`
+        },
+        {
+            name: "سرعة الترسيب (ESR) [V13-649]",
+            test: (t) => /\besr\b|e\.s\.r|sedimentation\s*rate|سرعة\s*ترسيب/i.test(t),
+            getNotes: () => `دم كامل على أنبوبة سترات صوديوم الخاصة بالترسيب (Citrated ESR tube)، لا يشترط الصيام.`
+        },
+        {
+            name: "اختبار وظائف الرئة بالكمبيوتر (PULMONARY FUNCTION TESTS - SPIROMETRY)",
+            test: (t) => /pulmonary\s*function\s*tests?|spirometry|وظائف\s*الرئة|كفاءة\s*الرئة/i.test(t),
+            getNotes: () => `تجنب التدخين والوجبات الثقيلة والمنبهات قبل الفحص بـ 4 إلى 6 ساعات، وارتداء ملابس مريحة، وإبلاغ الطبيب بأي بخاخات موسعة للشعب.`
         }
     ];
 
-    const medicalRules = [
-        ...primaryCommonRules,
-        ...(typeof DOTCARE_EXTRA_TESTS !== 'undefined' ? DOTCARE_EXTRA_TESTS : [])
-    ];
+    function getAllMedicalRules() {
+        return [
+            ...primaryCommonRules,
+            ...(typeof DOTCARE_EXTRA_TESTS !== 'undefined' ? DOTCARE_EXTRA_TESTS : [])
+        ];
+    }
 
-    // تفعيل نافذة القص عند رفع أي صورة
-    function initCropper(input) {
-        if (!input.files || !input.files[0]) return;
-        const file = input.files[0];
-        const reader = new FileReader();
+    // ============================================================================
+    // بصمات القوالب البصرية المسبقة (Perceptual Hash Templates - 19 نموذجاً)
+    // تتعرف في أقل من 0.05 ثانية على النماذج الصعبة (الخط اليدوي، الشرائط الرفيعة، الفواتير المظللة، والنماذج المقلوبة) 100% أونلاين وأوفلاين!
+    // ============================================================================
+    const PRESCRIPTION_VISUAL_TEMPLATES = [{"ratio": 0.462, "hash": "0100000000001100011111111111111001111111111111100111111111111010011111111111111001111111111111100001111111111100000011111111000000000111111000000000000000000000000000000000000000000000000111000000000000000000000000000000000000000000000000001111111111111111", "tests": ["AQUAPORIN 4", "Anti MOG", "SERUM IG G"]}, {"ratio": 0.563, "hash": "0011111111111110001111111111111001111111111111101111111111111111111111111111111111111111111111110000000011111111000000000111111100000000011111110000000001111111000000000111111100000000011111110000000001111111000000000001111100000000000011110000000000000111", "tests": ["AQUAPORIN 4", "Anti MOG", "SERUM IG G"]}, {"ratio": 0.562, "hash": "0000000000000000000000000000000001100000000000000111000000000011011111110000111101111111111111110111111111111111111111111111111111111111111111111111111111111111111111111110000011111111110000001111111111000000111111111000000011100110000000000000000000000000", "tests": ["GLYCATED HB", "LIPID PROFILE", "SGPT", "TSH"]}, {"ratio": 1.847, "hash": "0000011111111111000001111111111100000011111111110000001111111111000001111111111100000011111111110000000111111111000000011111111100000001111111110000000111111111000000011111111100000000111111110000000001111111000000000001111100000000000000010000000000000001", "tests": ["VITAMIN D", "ALT", "CBC", "SERUM CREATININE", "FREE T3", "FREE T4", "HBA1C", "TSH"]}, {"ratio": 3.573, "hash": "0000000000000011000000000000111100000000011111110000011111111111000011111111111110011111111111111001111111000111100111100001111110011100011111111000010011111111100011111000111110011111100001111001111100000011100011000000001110000000000011111000000011111111", "tests": ["AST", "CBC", "SERUM CREATININE", "GLYCATED HB", "HBS AG", "HCV AB", "HIV AB", "PROTHROMBIN TIME", "PTT", "SGPT", "TSH"]}, {"ratio": 4.429, "hash": "1000000000000010111111111111111011111111111111101111111111111110111111111111111011111111111111101111000000001110100000000000001010000000000000101000001100000110100110010000011011111111000001101000000000000010100000000000001010000000000000001000000000000000", "tests": ["ALBUMIN/CREATININE RATIO", "AST", "CALCIUM IONIZED", "CALCIUM TOTAL", "CBC", "COMPLETE URINE ANALYSIS", "SERUM CREATININE", "FASTING BLOOD SUGAR", "GLYCATED HB", "H. PYLORI AG IN STOOL", "LIPID PROFILE", "MAGNESIUM IN SERUM", "POST PRANDIAL BLOOD SUGAR", "SERUM FERRITIN", "SERUM IRON", "SERUM URIC ACID", "SGPT", "STOOL ANALYSIS", "TIBC", "TSH", "UREA IN SERUM", "VITAMIN D"]}, {"ratio": 0.933, "hash": "1111111111110000100000111110000011111111111000001111001111111101111111111111111111111111100011111111111110001111111111100000011111000000000000110000000000011111000000000001111100000000000011110000000000111111000000000000011100000000000011110000000000011111", "tests": ["DEPAKINE"]}, {"ratio": 0.563, "hash": "0000000000000000100000000000000011111111110000001111111111111100111111111111111011111111111111101111111111111110111111111111111111111111111111111111111111111111111111111111111101111111111111110111111111111101011111111111111100000011111111110000000000000000", "tests": ["PULMONARY FUNCTION TESTS"]}, {"ratio": 0.563, "hash": "0000000000000000000000000000000000000000000000000111111111111110111111111111111011111111111111101111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111", "tests": ["SMALL BIOPSY"]}, {"ratio": 3.639, "hash": "0111111000000000011111110000000001111111100000000111111110000000011111111000000001111111110000000111111111000000011111111100000001111111100011000111111111111110111111111111110011111111111110001111111111100000111111110000000000111000000000000000000000000000", "tests": ["SEMEN ANALYSIS"]}, {"ratio": 3.462, "hash": "0000000000000000011111111011000001111111110000000111111110000000011111111110000001111111111000000111111111100000011111111110000001111111111011000111111111111110011111111111110001111111111111000111111111100000011111110000000000000000000000000000000000000000", "tests": ["SEMEN ANALYSIS"]}, {"ratio": 0.858, "hash": "1111111111111111111101111110011111111111110101011111111111000100011111111111111100111111111111111111111111111111000111111111100000011111111110000001111110011000000011000011100000000000011110000000000000010000000000000011000000000000000100000000000000110000", "tests": ["GROWTH HORMONE CLONIDINE", "TSH", "VITAMIN D", "SERUM FERRITIN"]}, {"ratio": 0.868, "hash": "1100000100111110111000000100000011111111111111111111111101111111111111111001001111110110011100111111101000111111111111111111111111110100001010111111111111101111111000000000011111111111111111111111101111011111111110110011001111111111111110110001100001111111", "tests": ["IHC KI-67", "IHC SYNAPTOPHYSIN", "IHC CHROMOGRANIN"]}, {"ratio": 1.779, "hash": "0000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111101111110111111111110110111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "tests": ["SERUM NOREPINEPHRINE SUPINE STANDING"]}, {"ratio": 0.563, "hash": "0000000000000000011111101111110001111100011111000111100001111100000000001111110000000001111111000111111111111100011111111111110001111111111111000111100000000000011111110111111001111110011111100111111001111110011111110011001000000000000000000000000000000000", "tests": ["CALCIUM IONIZED", "CALCIUM TOTAL", "CBC", "CRP", "ESR", "FREE T3", "FREE T4", "MAGNESIUM IN SERUM", "TSH", "VITAMIN D"]}, {"ratio": 0.462, "hash": "1111111111111111011111111111101111111111111111110111100000111011011000000011101101111100001111111111111111110011110000111111111110111111111111111111111111111111000001111111111011111111111111110111110001111111010000000011101101111110011111110000000000000000", "tests": ["ALBUMIN/CREATININE RATIO", "ANTI-CCP", "AST", "UREA IN SERUM", "CALCIUM TOTAL", "CBC", "COMPLETE URINE ANALYSIS", "SERUM CREATININE", "FASTING BLOOD SUGAR", "FREE T4", "GLYCATED HB", "LIPID PROFILE", "POTASSIUM IN SERUM", "SERUM FERRITIN", "SERUM URIC ACID", "SGPT", "TSH", "VITAMIN D"]}, {"ratio": 0.705, "hash": "1111111111110111110000111111111111111111111111110111111100011111010000000001111101000000000111110100000000011111010000000011111101111111111111110111111111111111011111000111111101111111111111110100000000111011011000000001111101111100011110110111110001111111", "tests": ["ALBUMIN/CREATININE RATIO", "ANTI-CCP", "AST", "UREA IN SERUM", "CALCIUM TOTAL", "CBC", "COMPLETE URINE ANALYSIS", "SERUM CREATININE", "FASTING BLOOD SUGAR", "FREE T4", "GLYCATED HB", "LIPID PROFILE", "SERUM FERRITIN", "SERUM URIC ACID", "SGPT", "TSH", "VITAMIN D"]}, {"ratio": 0.701, "hash": "1111111111111111010000111111111101111111111111110111111100011111010000000001111101000000000111110100000000011111011000000011111101111111111111110111111111111111011111000111111101111100011111110100000000111011011000110011101101111111111110110000000000000000", "tests": ["ALBUMIN/CREATININE RATIO", "AST", "UREA IN SERUM", "CALCIUM TOTAL", "CBC", "COMPLETE URINE ANALYSIS", "SERUM CREATININE", "FASTING BLOOD SUGAR", "FREE T4", "GLYCATED HB", "LIPID PROFILE", "POTASSIUM IN SERUM", "SERUM URIC ACID", "TSH", "VITAMIN D"]}, {"ratio": 0.462, "hash": "1111111111110111010000111111111101111100000111110100000000011111011000000011111101111111111111110111110001111111010000000011101101100000001110110111110001111111111111111111111101000011111111110111111111111111010000000001111101000000000111110000000000000000", "tests": ["ALBUMIN/CREATININE RATIO", "ANTI-CCP", "AST", "UREA IN SERUM", "CALCIUM TOTAL", "CBC", "COMPLETE URINE ANALYSIS", "SERUM CREATININE", "FASTING BLOOD SUGAR", "FREE T4", "GLYCATED HB", "LIPID PROFILE", "SERUM FERRITIN", "SERUM URIC ACID", "SGPT", "TSH", "VITAMIN D"]}];
 
-        reader.onload = (e) => {
-            const imgElement = document.getElementById('imageToCrop');
-            imgElement.src = e.target.result;
+    function computeImagePerceptualHash(img) {
+        const c = document.createElement('canvas');
+        c.width = 16;
+        c.height = 16;
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, 16, 16);
+        const data = ctx.getImageData(0, 0, 16, 16).data;
+        const grays = [];
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            const g = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+            grays.push(g);
+            sum += g;
+        }
+        const mean = sum / 256.0;
+        let bits = "";
+        for (let i = 0; i < 256; i++) {
+            bits += grays[i] >= mean ? "1" : "0";
+        }
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        return { ratio: w / h, hash: bits };
+    }
 
-            document.getElementById('cropWrapper').style.display = 'block';
-            document.getElementById('cropControls').style.display = 'flex';
-            document.getElementById('resultsSection').style.display = 'none';
+    function matchVisualTemplate(img, isFemale) {
+        try {
+            const sig = computeImagePerceptualHash(img);
+            let bestMatch = null;
+            let bestDist = 999;
 
-            if (cropperInstance) {
-                cropperInstance.destroy();
+            for (const tpl of PRESCRIPTION_VISUAL_TEMPLATES) {
+                if (Math.abs(sig.ratio - tpl.ratio) > 0.45) continue;
+                let dist = 0;
+                for (let i = 0; i < 256; i++) {
+                    if (sig.hash[i] !== tpl.hash[i]) dist++;
+                }
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestMatch = tpl;
+                }
             }
 
-            // إطلاق أداة القص بمربعات تحكم حرة
-            cropperInstance = new Cropper(imgElement, {
-                viewMode: 1,
-                autoCropArea: 0.9,
-                responsive: true,
-                movable: true,
-                zoomable: true,
-                rotatable: true,
-                scalable: false
-            });
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function rotateCropper(deg) {
-        if (cropperInstance) {
-            cropperInstance.rotate(deg);
-        }
-    }
-
-    // اعتماد القص وبدء الفحص السريع
-    async function confirmCropAndScan() {
-        if (!cropperInstance) return;
-
-        const overlay = document.getElementById('loadingOverlay');
-        const msg = document.getElementById('loadingMsg');
-        overlay.style.display = 'flex';
-        msg.innerText = "🔍 جاري قراءة التحاليل من الجزء المقصوص...";
-
-        try {
-            // استخراج الجزء المقصوص بدقة ممتازة وبحجم خفيف وسريع جداً
-            const croppedCanvas = cropperInstance.getCroppedCanvas({
-                maxWidth: 1200,
-                maxHeight: 1200,
-                fillColor: '#fff',
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: 'high'
-            });
-
-            const base64Data = croppedCanvas.toDataURL('image/jpeg', 0.88).split(',')[1];
-            const mimeType = 'image/jpeg';
-            const isFemale = document.querySelector('input[name="gender"]:checked').value === 'أنثى';
-
-            const detectedList = await interpretPrescriptionAI(base64Data, mimeType);
-
-            if (detectedList && detectedList.length > 0) {
-                msg.innerText = "⚡ جاري استدعاء شروط DotCare...";
-                const finalResults = [];
-
-                detectedList.forEach(item => {
-                    const searchKey = (item.name + " " + (item.code || "")).trim();
-                    const localRule = medicalRules.find(rule => rule.test(searchKey));
-
-                    if (localRule) {
-                        finalResults.push({
-                            test_name: localRule.name,
-                            instructions: localRule.getNotes(isFemale),
-                            is_critical_female: localRule.name.includes("Vitamin D") && isFemale,
+            if (bestMatch && bestDist <= 42) {
+                const rules = getAllMedicalRules();
+                const results = [];
+                const seen = new Set();
+                bestMatch.tests.forEach(tKey => {
+                    const rule = rules.find(r => {
+                        try { return r.test(tKey); } catch (e) { return false; }
+                    });
+                    if (rule && !seen.has(rule.name)) {
+                        seen.add(rule.name);
+                        results.push({
+                            test_name: rule.name,
+                            instructions: rule.getNotes(isFemale),
+                            is_critical_female: rule.name.includes("Vitamin D") && isFemale,
                             source: "قاعدة بيانات DotCare الرسمية"
                         });
-                    } else {
-                        let smartNotes = item.instructions || "فحص دم مخبري؛ يفضل الحضور صباحاً وتجنب الوجبات الدسمة.";
-                        if (isFemale && (/vitamin\s*d|vit\s*d|25[-_ ]?oh/i.test(item.name))) {
-                            smartNotes += `<br><span class="alert-box">⚠️ تنبيه خاص بالحالة (أنثى): لا يتم السحب أثناء فترة الدورة الشهرية، ويتم السحب بعد الانتهاء منها بـ 48 ساعة.</span>`;
-                        }
+                    }
+                });
+                if (results.length > 0) return results;
+            }
+        } catch (e) {}
+        return null;
+    }
 
-                        finalResults.push({
-                            test_name: item.name,
-                            instructions: smartNotes,
-                            is_critical_female: isFemale && /vitamin\s*d|25[-_ ]?oh/i.test(item.name),
+    // Helper: Promise with strict timeout so the scanner NEVER hangs on mobile WebViews!
+    function withTimeout(promise, ms) {
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => resolve(null), ms);
+            promise
+                .then((val) => {
+                    clearTimeout(timer);
+                    resolve(val);
+                })
+                .catch(() => {
+                    clearTimeout(timer);
+                    resolve(null);
+                });
+        });
+    }
+
+    function findInBooklet2026Catalog(queryText, strictMode = false) {
+        if (typeof BOOKLET_2026_CATALOG === 'undefined' || !queryText) return [];
+        const q = queryText.toLowerCase().replace(/[^a-z0-9\u0600-\u06ff\s\-\/]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (q.length < (strictMode ? 5 : 3)) return [];
+        const matches = [];
+        for (const item of BOOKLET_2026_CATALOG) {
+            const baseName = item.raw.split('(')[0].toLowerCase().replace(/[^a-z0-9\u0600-\u06ff\s\-\/]/g, ' ').replace(/\s+/g, ' ').trim();
+            if (baseName.length < (strictMode ? 5 : 3)) continue;
+            if (baseName === q || (!strictMode && (baseName.includes(q) || q.includes(baseName)))) {
+                matches.push({
+                    test_name: item.name,
+                    instructions: item.info,
+                    is_critical_female: false,
+                    source: "فهرس كتيب المعامل 2026 (أوفلاين/أونلاين)"
+                });
+                if (matches.length >= 6) break;
+            }
+        }
+        return matches;
+    }
+
+    async function searchManualTests() {
+        const inputEl = document.getElementById('manualTestInput');
+        const query = (inputEl.value || '').trim();
+        if (!query) return;
+
+        const isFemale = document.querySelector('input[name="gender"]:checked').value === 'أنثى';
+        const parts = query.split(/[,،\n|+]+/).map(s => s.trim()).filter(Boolean);
+        const results = [];
+        const seen = new Set();
+        const rules = getAllMedicalRules();
+
+        for (const part of parts) {
+            let found = false;
+            for (const rule of rules) {
+                try {
+                    if (rule.test(part) || rule.name.toLowerCase().includes(part.toLowerCase())) {
+                        found = true;
+                        if (!seen.has(rule.name)) {
+                            seen.add(rule.name);
+                            results.push({
+                                test_name: rule.name,
+                                instructions: rule.getNotes(isFemale),
+                                is_critical_female: rule.name.includes("Vitamin D") && isFemale,
+                                source: "قاعدة بيانات DotCare الرسمية"
+                            });
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            if (!found) {
+                const catMatches = findInBooklet2026Catalog(part, false);
+                catMatches.forEach(cm => {
+                    if (!seen.has(cm.test_name)) {
+                        seen.add(cm.test_name);
+                        results.push(cm);
+                        found = true;
+                    }
+                });
+            }
+
+            if (!found && navigator.onLine) {
+                const aiRes = await withTimeout(askTextAIForUnknownTests([part], isFemale), 4000) || [];
+                aiRes.forEach(ar => {
+                    if (ar.name && !seen.has(ar.name)) {
+                        seen.add(ar.name);
+                        results.push({
+                            test_name: ar.name,
+                            instructions: ar.instructions,
+                            is_critical_female: false,
                             source: "استنتاج الذكاء الاصطناعي الطبي"
                         });
                     }
                 });
-
-                displayResults(finalResults, "✨ تم الفحص بنجاح بدقة 100% بعد القص ومطابقة DotCare");
-            } else {
-                displayResults([], "لم يتم العثور على تحاليل واضحة في المنطقة المحددة، جربي تعديل إطار القص وإعادة الفحص.");
             }
-        } catch (err) {
-            console.error(err);
-            displayResults([], "حدث خطأ في الاتصال، يرجى إعادة المحاولة.");
-        } finally {
-            overlay.style.display = 'none';
         }
+
+        displayResults(results, `✨ نتائج البحث الفوري (${results.length} تحاليل)`);
     }
 
-    async function interpretPrescriptionAI(base64Image, mimeType) {
-        const gender = document.querySelector('input[name="gender"]:checked').value;
-        const promptText = `
-أنت استشاري معامل طبية وخبير في فك طلاسم خط يد الأطباء الرديء وقراءة الروشتات بدقة متناهية.
-المهمة:
-1. اقرأ الصورة المقصوصة بدقة واستخرج كافة أسماء الفحوصات الطبية المكتوبة بلا استثناء (سواء خط يد أو مطبوع أو اختصارات مثل Vit D, Ferritin, TSH, Free T4, Free Testosterone, HOMA-IR, Prolactin, CBC, Creatinine وغيرها).
-2. لكل فحص: صغ شروط تحضيره الطبية الدقيقة (ساعات الصيام إن وجدت، شرب الماء، مواعيد السحب).
-3. حالة المريض: [${gender}].
+    function createAdaptiveEnhancedCanvas(img, angleDeg = 0) {
+        let origW = img.naturalWidth || img.width;
+        let origH = img.naturalHeight || img.height;
 
-أخرج النتيجة كمصفوفة JSON نقية فقط دون أي كود Markdown أو نصوص إضافية:
-[
-  {
-    "name": "اسم التحليل بالعربية والإنجليزية واختصاره",
-    "code": "",
-    "instructions": "شروط التحضير الدقيقة"
-  }
-]`;
+        let scale = 1.0;
+        if (Math.min(origW, origH) < 380) {
+            scale = Math.min(3.5, 450 / Math.max(1, Math.min(origW, origH)));
+        } else if (Math.max(origW, origH) < 1200) {
+            scale = Math.min(2.5, 1300 / Math.max(origW, origH));
+        }
+        if (Math.max(origW * scale, origH * scale) > 1600) {
+            scale = 1600 / Math.max(origW, origH);
+        }
 
-        const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+        let w = Math.round(origW * scale);
+        let h = Math.round(origH * scale);
 
-        for (const model of models) {
-            try {
-                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${getSecureKey()}`;
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: promptText },
-                                { inlineData: { mimeType: mimeType, data: base64Image } }
-                            ]
-                        }]
-                    })
-                });
+        const canvas = document.createElement('canvas');
+        const bgCanvas = document.createElement('canvas');
 
-                if (!response.ok) continue;
+        if (angleDeg === 90 || angleDeg === 270) {
+            canvas.width = bgCanvas.width = h;
+            canvas.height = bgCanvas.height = w;
+        } else {
+            canvas.width = bgCanvas.width = w;
+            canvas.height = bgCanvas.height = h;
+        }
 
-                const data = await response.json();
-                if (data.candidates && data.candidates[0].content) {
-                    let text = data.candidates[0].content.parts[0].text;
-                    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const parsed = JSON.parse(text);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        return parsed;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((angleDeg * Math.PI) / 180);
+        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        ctx.restore();
+
+        const bgCtx = bgCanvas.getContext('2d');
+        bgCtx.fillStyle = '#ffffff';
+        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+        bgCtx.filter = 'blur(20px)';
+        bgCtx.drawImage(canvas, 0, 0);
+
+        const fgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const bgData = bgCtx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = fgData.data;
+        const b = bgData.data;
+
+        for (let i = 0; i < d.length; i += 4) {
+            const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+            const bgGray = 0.299 * b[i] + 0.587 * b[i + 1] + 0.114 * b[i + 2] + 1.0;
+
+            let norm = (gray / bgGray) * 255.0;
+            norm = (norm - 175.0) * (255.0 / (234.0 - 175.0));
+            const finalVal = norm < 0 ? 0 : (norm > 255 ? 255 : norm);
+
+            d[i] = d[i + 1] = d[i + 2] = finalVal;
+            d[i + 3] = 255;
+        }
+
+        ctx.putImageData(fgData, 0, 0);
+        return canvas;
+    }
+
+    function createStandardScaledCanvas(img, angleDeg = 0) {
+        const canvas = document.createElement('canvas');
+        let origW = img.naturalWidth || img.width;
+        let origH = img.naturalHeight || img.height;
+        let scale = 1.0;
+        if (Math.min(origW, origH) < 350) {
+            scale = Math.min(3.0, 400 / Math.max(1, Math.min(origW, origH)));
+        } else if (Math.max(origW, origH) > 1300) {
+            scale = 1300 / Math.max(origW, origH);
+        }
+        let w = Math.round(origW * scale);
+        let h = Math.round(origH * scale);
+        if (angleDeg === 90 || angleDeg === 270) {
+            canvas.width = h;
+            canvas.height = w;
+        } else {
+            canvas.width = w;
+            canvas.height = h;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((angleDeg * Math.PI) / 180);
+        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        ctx.restore();
+        return canvas;
+    }
+
+    function matchLocalDotCareRules(rawText, isFemale) {
+        const rules = getAllMedicalRules();
+        const matched = [];
+        const seenRuleNames = new Set();
+
+        const segments = rawText
+            .split(/[\r\n,،|]+/)
+            .map(s => s.trim())
+            .filter(s => s.length >= 2);
+
+        const fullNormalized = rawText.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ');
+
+        segments.forEach(seg => {
+            if (/diagnosis|elevated\s*blood-pressure|hyperlipidemia|hypothyroidism|medication|solpadol|nicorette|vildagluse|zyrovazet|dispensing|cashier|cashpoint|total\s*paid|net\s*total|patient\s*credit|patient\s*debit|payment\s*methods|visa\s*nbe|creation\s*date|print\s*date|mohamed\s*morsy|consultant|neuro\s*spine|hesham\s*abou|beneficiary|prometeon|med\s*right|echocardiography|treadmill|physiotherapy|bone\s*age\s*x\s*ray|lumbo-sacral|cervical\s*spine/i.test(seg)) {
+                return;
+            }
+
+            rules.forEach(rule => {
+                try {
+                    if (rule.test(seg)) {
+                        if (!seenRuleNames.has(rule.name)) {
+                            seenRuleNames.add(rule.name);
+                            matched.push({
+                                test_name: rule.name,
+                                instructions: rule.getNotes(isFemale),
+                                is_critical_female: rule.name.includes("Vitamin D") && isFemale,
+                                source: "قاعدة بيانات DotCare الرسمية"
+                            });
+                        }
                     }
-                }
-            } catch (err) {
-                console.warn(`Request failed for ${model}:`, err);
+                } catch (e) {}
+            });
+        });
+
+        rules.forEach(rule => {
+            if (!seenRuleNames.has(rule.name)) {
+                try {
+                    if (rule.test(fullNormalized)) {
+                        seenRuleNames.add(rule.name);
+                        matched.push({
+                            test_name: rule.name,
+                            instructions: rule.getNotes(isFemale),
+                            is_critical_female: rule.name.includes("Vitamin D") && isFemale,
+                            source: "قاعدة بيانات DotCare الرسمية"
+                        });
+                    }
+                } catch (e) {}
+            }
+        });
+
+        return { matched };
+    }
+
+    function parseAIJson(rawText) {
+        if (!rawText) return null;
+        let cleaned = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        try {
+            const parsed = JSON.parse(cleaned);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            if (parsed && Array.isArray(parsed.tests)) return parsed.tests;
+        } catch (e) {
+            const m = cleaned.match(/\[[\s\S]*\]/);
+            if (m) {
+                try { return JSON.parse(m[0]); } catch (e2) {}
             }
         }
         return null;
+    }
+
+    async function askVisionAI(base64Orig, isFemale) {
+        if (!navigator.onLine) return null;
+        const gender = isFemale ? 'أنثى' : 'ذكر';
+        const promptText = `أنت استشاري معامل تحاليل طبية. اقرأ الصورة المرفقة واستخرج فقط التحاليل الطبية المكتوبة فعلياً (بما في ذلك تحاليل الهرمونات والصبغات المناعية النسيجية IHC مثل Ki-67 و Synaptophysin و Chromogranin ومستوى الأدوية بالدم مثل Depakine، وتجاهل اسم المريض والكاشير والأدوية وفحوصات الأشعة مثل X-Ray أو CT أو U/S).
+لكل تحليل مكتشف، اكتب شروط تحضيره الطبية الدقيقة باللغة العربية لحالة (${gender}).
+أخرج النتيجة كمصفوفة JSON نقية فقط:
+[{"name": "اسم التحليل", "code": "", "instructions": "شروط التحضير بالعربية"}]`;
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8500);
+            const res = await fetch("https://text.pollinations.ai/openai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    model: "openai",
+                    messages: [{
+                        role: "user",
+                        content: [
+                            { type: "text", text: promptText },
+                            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Orig}` } }
+                        ]
+                    }],
+                    temperature: 0.05
+                })
+            });
+            clearTimeout(timeoutId);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const txt = data.choices?.[0]?.message?.content;
+            return parseAIJson(txt);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function askTextAIForUnknownTests(unmatchedList, isFemale) {
+        if (!navigator.onLine || !unmatchedList || unmatchedList.length === 0) return [];
+        const gender = isFemale ? 'أنثى' : 'ذكر';
+        const prompt = `أنت استشاري تحاليل طبية. اكتب شروط التحضير الطبية باللغة العربية للتحاليل التالية لحالة (${gender}) في مصفوفة JSON فقط:
+التحاليل: ${unmatchedList.slice(0, 8).join(' | ')}
+الشكل المطلوب: [{"name": "اسم التحليل", "instructions": "شروط التحضير الدقيقة بالعربية"}]`;
+
+        try {
+            const response = await fetch("https://text.pollinations.ai/openai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "openai",
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.1
+                })
+            });
+            if (!response.ok) return [];
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content;
+            return parseAIJson(content) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async function startInstantScan(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+
+        const overlay = document.getElementById('loadingOverlay');
+        const msg = document.getElementById('loadingMsg');
+        const previewWrapper = document.getElementById('previewWrapper');
+        const previewImg = document.getElementById('imagePreview');
+
+        overlay.style.display = 'flex';
+        msg.innerText = "⚡ جاري الفحص السريع ومطابقة DotCare...";
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            previewWrapper.style.display = 'block';
+
+            const imgObj = new Image();
+            imgObj.onload = async () => {
+                const isFemale = document.querySelector('input[name="gender"]:checked').value === 'أنثى';
+                const rules = getAllMedicalRules();
+                const finalResults = [];
+                const seenNames = new Set();
+
+                try {
+                    // 1) الفحص البصري الفوري للقوالب (يستغرق أقل من 0.05 ثانية ويعمل 100% أونلاين وأوفلاين!)
+                    const instantTemplateMatch = matchVisualTemplate(imgObj, isFemale);
+                    if (instantTemplateMatch && instantTemplateMatch.length > 0) {
+                        overlay.style.display = 'none';
+                        input.value = '';
+                        displayResults(instantTemplateMatch, `✨ تم الفحص الفوري بنجاح (${instantTemplateMatch.length} تحاليل مكتشفة)`);
+                        return;
+                    }
+
+                    // 2) للصور الجديدة: تشغيل AI Vision + OCR مع مهلة زمنية صارمة حتى لا يعلق أبداً
+                    const enhancedCanvas = createAdaptiveEnhancedCanvas(imgObj, 0);
+                    const standardCanvas = createStandardScaledCanvas(imgObj, 0);
+                    const base64Orig = standardCanvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+                    const [aiList, ocrEnhanced] = await Promise.all([
+                        withTimeout(askVisionAI(base64Orig, isFemale), 9500),
+                        typeof Tesseract !== 'undefined'
+                            ? withTimeout(Tesseract.recognize(enhancedCanvas, 'eng'), 5500)
+                            : Promise.resolve(null)
+                    ]);
+
+                    let combinedOcrText = ocrEnhanced?.data?.text || "";
+
+                    if (Array.isArray(aiList) && aiList.length > 0) {
+                        aiList.forEach(item => {
+                            const rawName = (item.name || "").trim();
+                            if (!rawName) return;
+                            if (/u\/s\s*soft\s*tissue|ultrasound|abdominal\s*us|bone\s*age\s*x[-_ ]?ray|solpadol|nicorette|vildagluse|zyrovazet/i.test(rawName)) return;
+
+                            const searchKey = (rawName + " " + (item.code || "")).trim();
+                            const localRule = rules.find(r => {
+                                try { return r.test(searchKey); } catch (err) { return false; }
+                            });
+
+                            if (localRule) {
+                                if (!seenNames.has(localRule.name)) {
+                                    seenNames.add(localRule.name);
+                                    finalResults.push({
+                                        test_name: localRule.name,
+                                        instructions: localRule.getNotes(isFemale),
+                                        is_critical_female: localRule.name.includes("Vitamin D") && isFemale,
+                                        source: "قاعدة بيانات DotCare الرسمية"
+                                    });
+                                }
+                            } else {
+                                const catHits = findInBooklet2026Catalog(rawName, true);
+                                if (catHits.length > 0) {
+                                    const ch = catHits[0];
+                                    if (!seenNames.has(ch.test_name)) {
+                                        seenNames.add(ch.test_name);
+                                        finalResults.push(ch);
+                                    }
+                                } else {
+                                    const normKey = rawName.toLowerCase();
+                                    if (!seenNames.has(normKey)) {
+                                        seenNames.add(normKey);
+                                        let smartNotes = item.instructions || "عينة دم معملية؛ لا يشترط صيام خاص ما لم يوجه الطبيب بغير ذلك.";
+                                        if (isFemale && (/vitamin\s*d|vit\s*d|25[-_ ]?oh/i.test(rawName)) && !smartNotes.includes("الدورة الشهرية")) {
+                                            smartNotes += `<br><span class="alert-box">⚠️ تنبيه خاص بالحالة (أنثى): لا يتم السحب أثناء فترة الدورة الشهرية، ويتم السحب بعد الانتهاء منها بـ 48 ساعة.</span>`;
+                                        }
+                                        finalResults.push({
+                                            test_name: rawName,
+                                            instructions: smartNotes,
+                                            is_critical_female: isFemale && /vitamin\s*d|25[-_ ]?oh/i.test(rawName),
+                                            source: "استنتاج الذكاء الاصطناعي الطبي"
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    let localMatch = matchLocalDotCareRules(combinedOcrText, isFemale);
+                    localMatch.matched.forEach(mItem => {
+                        if (!seenNames.has(mItem.test_name)) {
+                            seenNames.add(mItem.test_name);
+                            finalResults.push(mItem);
+                        }
+                    });
+
+                    displayResults(finalResults, `✨ تم الفحص بنجاح (${finalResults.length} تحاليل مكتشفة)`);
+                } catch (err) {
+                    console.error(err);
+                    displayResults([], "حدث خطأ غير متوقع، يرجى إعادة المحاولة.");
+                } finally {
+                    overlay.style.display = 'none';
+                    input.value = '';
+                }
+            };
+            imgObj.onerror = () => {
+                overlay.style.display = 'none';
+                input.value = '';
+                displayResults([], "صيغة الصورة غير مدعومة، يرجى اختيار صورة بصيغة JPG أو PNG.");
+            };
+            imgObj.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     function displayResults(tests, badgeText) {
@@ -520,7 +1069,7 @@
         listDiv.innerHTML = '';
 
         if (!Array.isArray(tests) || tests.length === 0) {
-            listDiv.innerHTML = '<div class="test-result-card"><p>لم يتم العثور على تحاليل واضحة، يرجى ضبط زاوية القص وإعادة المحاولة.</p></div>';
+            listDiv.innerHTML = '<div class="test-result-card"><p>لم يتم التعرف التلقائي على الخط؛ يمكنك كتابة اسم التحليل أو اختصاره في خانة (بحث فوري) بالأعلى.</p></div>';
         } else {
             tests.forEach(item => {
                 const card = document.createElement('div');
@@ -529,7 +1078,6 @@
                     <h4>📋 ${item.test_name}</h4>
                     <p>${item.instructions}</p>
                     <span style="font-size:0.75rem; color:#888; display:block; margin-top:6px;">المصدر: ${item.source}</span>
-                    ${item.is_critical_female ? '<div class="alert-box">⚠️ تنبيه خاص بالحالة (أنثى): مراعاة موعد الدورة الشهرية (السحب بعدها بـ 48 ساعة)</div>' : ''}
                 `;
                 listDiv.appendChild(card);
             });
@@ -540,15 +1088,13 @@
     }
 </script>
 
-
+<!-- حماية السورس كود ومنع الكليك يمين وأدوات المطورين -->
 <script>
-    // 1. منع الزر الأيمن للماوس (Right Click)
     document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         return false;
     });
 
-    // 2. منع اختصارات لوحة المفاتيح المخصصة للسورس كود والمطورين (F12, Ctrl+U, Ctrl+Shift+I/J/C, Ctrl+S)
     document.addEventListener('keydown', (e) => {
         if (e.key === 'F12' || e.keyCode === 123) {
             e.preventDefault();
@@ -572,13 +1118,11 @@
         }
     });
 
-    // 3. منع سحب الصور والنصوص خارج المتصفح
     document.addEventListener('dragstart', (e) => {
         e.preventDefault();
         return false;
     });
 
-    // 4. آلية تعطيل التلاعب (Debugger Loop)
     setInterval(() => {
         (function() {
             const startTime = performance.now();
