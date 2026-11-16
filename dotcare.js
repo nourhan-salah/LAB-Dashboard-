@@ -1146,4 +1146,115 @@ const DOTCARE_EXTRA_TESTS = [
         test: (t) => /urine\s*culture|sputum\s*culture|blood\s*culture|c\/s|مزرعة/i.test(t),
         getNotes: () => `يفضل الامتناع عن المضاد الحيوي 48 ساعة، وكتابة مكان العينة ونوع المضاد الحيوي. ترفض أي مزرعة في أنابيب وزرمان أو إبندورف غير معقمة أو العينات البيطرية. في قسطرة البول تسحب العينة من الخرطوم وليس الكيس. في البلغم يشترط أول بصاق صباحي بعد المضمضة بالماء وقبل الأكل. في مزارع الدم المتأخرة تحفظ في حرارة الغرفة ولا توضع بالحضانة.`
     }
+        ,
+    {
+        name: "الأجسام المضادة للأكوابورين 4 (AQUAPORIN 4 / AQP4 Ab) [V13-304]",
+        test: (t) => /aquaporin|aqp\s*4|neuromyelitis/i.test(t),
+        getNotes: () => `سيرم (300 µL) أو سائل نخاع شوكي CSF (300 µL)، لا يشترط الصيام؛ لتشخيص التهاب العصب البصري والنخاع الشوكي المناعي (Neuromyelitis Optica). النتيجة خلال 96 ساعة.`
+    },
+    {
+        name: "ثلاثي يود الثيرونين الحر (FREE T3 / FT3) [V13-168]",
+        test: (t) => /free\s*t3|\bft3\b|triiodothyronine\s*free/i.test(t),
+        getNotes: () => `سيرم دم (500 µL) لا يحتاج إلى صيام، ويفضل سحبه صباحاً لتقييم نشاط الغدة الدرقية.`
+    },
+    {
+        name: "الهيموجلوبين السكري / السكر التراكمي (HBA1C - GLYCATED HB) [2040003]",
+        test: (t) => /hb\s*a\s*[1il]\s*c|glycated\s*h(ae|e)?(moglobin|b\b)|glycosylated\s*h(ae|e)?(moglobin|b\b)|\ba[1il]c\b|2040003/i.test(t),
+        getNotes: () => `دم كامل على أنبوبة EDTA، لا يشترط الصيام نهائياً؛ لتقييم متوسط ضبط السكر بالدم خلال الـ 3 أشهر السابقة.`
+    },
+    {
+        name: "مستضد فيروس الالتهاب الكبدي بي السطحي (HBsAg) [V13-8]",
+        test: (t) => /hb\s*s\s*ag|hepatitis\s*b\s*surface|بي\s*السطحي/i.test(t),
+        getNotes: () => `سيرم (200 µL) لا يشترط الصيام؛ للكشف عن الإصابة بفيروس الالتهاب الكبدي الوبائي (B). النتيجة في نفس اليوم.`
+    },
+    {
+        name: "أجسام مضادة لفيروس الالتهاب الكبدي سي (HCV Ab / HCV IgM) [V13-10]",
+        test: (t) => /hc\s*v\s*ab|hc\s*v\s*igm|hepatitis\s*c\s*ab|فيروس\s*سي/i.test(t),
+        getNotes: () => `سيرم (200 µL) لا يشترط الصيام؛ للكشف عن الأجسام المضادة لفيروس الالتهاب الكبدي الوبائي (C).`
+    },
+    {
+        name: "أجسام مضادة لفيروس نقص المناعة المكتسبة (HIV 1+2 Ab) [V13-375]",
+        test: (t) => /\bhiv\b\s*(1\+?2)?\s*(ab)?|human\s*immunodeficiency/i.test(t),
+        getNotes: () => `سيرم (200 µL) لا يشترط الصيام.`
+    },
+    {
+        name: "الماغنسيوم في مصل الدم (MAGNESIUM IN SERUM) [V13-752]",
+        test: (t) => /magnesium\s*(in\s*serum)?|\bmg\b\s*in\s*serum/i.test(t),
+        getNotes: () => `سيرم غير متحلل (300 µL) لا يشترط الصيام، مع تجنب المكملات المحتوية على الماغنسيوم قبل السحب بـ 24 ساعة.`
+    },
+    {
+        name: "الكالسيوم الكلي في الدم (CALCIUM TOTAL) [V13-747]",
+        test: (t) => /calcium\s*\(?\s*total\s*\)?|total\s*calcium|كالسيوم\s*كلي/i.test(t),
+        getNotes: () => `سيرم (300 µL) لا يشترط الصيام، ويفضل سحب العينة بدون ربط التورنيكيه لفترة طويلة.`
+    },
+    {
+        name: "الكالسيوم المتأين (CALCIUM IONIZED) [V13-748]",
+        test: (t) => /calcium\s*\(?\s*ionized\s*\)?|ionized\s*calcium|ca\s*ionized/i.test(t),
+        getNotes: () => `يسحب في أنبوبة جل منفصلة ومستقلة (Serum gel tube)، ويمنع فتح الأنبوبة أو تقسيم العينة بتاتاً لتأثرها الشديد بالهواء.`
+    },
+    {
+        name: "الفحص الكروموسومي بالدم (Karyotyping - Chromosomal Analysis) [219001]",
+        test: (t) => /karyotyp(e|ing)|chromosomal\s*analysis|فحص\s*الكروموسومات|خريطة\s*وراثية/i.test(t),
+        getNotes: () => `دم كامل على أنبوبة هيبارين صوديوم أو ليثيوم (Sodium/Lithium Heparin - غطاء أخضر) في ظروف معقمة تماماً، لا يشترط الصيام، ويُحفظ في درجة حرارة الغرفة (يُمنع التجميد أو التبريد الشديد) مع إرفاق التاريخ المرضي.`
+    },
+    {
+        name: "فحص الحذف الدقيق بكروموسوم الذكورة (Y-Chromosome Microdeletion: AZFa, AZFb, AZFc) [V13-61]",
+        test: (t) => /y\s*[-_ ]?microdeletion|\bazf[abc]?\b|chromosome\s*y\s*microdeletion/i.test(t),
+        getNotes: () => `دم كامل على أنبوبة EDTA (1-3 mL)، لا يشترط الصيام؛ للكشف الجزيئي (PCR) عن الحذف الجيني في مناطق (AZFa, AZFb, AZFc) على كروموسوم Y في حالات انعدام أو نقص الحيوانات المنوية الشديد.`
+    },
+    {
+        name: "اختبار حساسية الجلد / الوخز والمستنشقات والأطعمة (Skin Prick Allergy Test - Food, Control & Inhalants) [211023]",
+        test: (t) => /skin\s*(prick\s*)?test|allergy.*(food|inhalant)|food.*inhalant|skin\s*allergy|اختبار\s*حساسية\s*الجلد/i.test(t),
+        getNotes: () => `في حال اختبار وخز الجلد (Skin Prick Test): يشترط إيقاف جميع مضادات الهيستامين وأدوية الحساسية والبرد والكحة لمدة 5 إلى 7 أيام قبل الاختبار (لئلا يتأثر الـ Positive Control)، أما في حال فحص حساسية الطعام والمستنشقات بالدم (Specific IgE Food & Inhalants) فيُسحب سيرم دم ولا يتأثر بأدوية الحساسية ولا يشترط الصيام.`
+    },
+    {
+        name: "زمن النزف وزمن التجلط (Bleeding Time & Clotting Time - BT & CT) [209010]",
+        test: (t) => /bleeding\s*time|clotting\s*time|\bbt\b.*\bct\b|زمن\s*النزف/i.test(t),
+        getNotes: () => `يُجرى الفحص مباشرة للمريض داخل المعمل (وخز قياسي)، لا يشترط الصيام، ويلزم إبلاغ المعمل بأي أدوية سيولة أو أسبرين أو مسكنات (NSAIDs) تناولها المريض خلال آخر 7 أيام.`
+    },
+    {
+        name: "اختبار تحفيز هرمون النمو بالكلونيدين (Growth Hormone Stimulation Test by Clonidine) [V13-206]",
+        test: (t) => /growth\s*hormone.*(clonidine|stimulation)|clonidine.*growth|تحفيز\s*هرمون\s*النمو/i.test(t),
+        getNotes: () => `صيام تام من 8 إلى 10 ساعات صباحاً قبل الفحص (يُسمح بالماء فقط) مع راحة تامة؛ تسحب عينة دم أساسية (0 min) ثم يُعطى عقار الكلونيدين بجرعة يحددها الطبيب وتسحب عينات متتالية (بعد 30، 60، 90، و120 دقيقة) في أنابيب سيرم.`
+    },
+    {
+        name: "صبغة مناعية نسيجية لمؤشر التكاثر الخلوي (IHC: Ki-67) [2160015]",
+        test: (t) => /ki[-_ ]?67|ihc\s*ki/i.test(t),
+        getNotes: () => `إحضار بلوك البرافين النسيجي (Paraffin Block) مع الشرائح المصبوغة وتقرير الباثولوجي الأصلي؛ لا يشترط صيام المريض (فحص صبغات مناعية هستوكيميائية IHC لتقييم نشاط وانقسام الخلايا).`
+    },
+    {
+        name: "صبغة مناعية نسيجية للسينابتوفيزين (IHC: Synaptophysin) [2160016]",
+        test: (t) => /synaptophysin|ihc\s*synapto/i.test(t),
+        getNotes: () => `إحضار بلوك البرافين النسيجي (Paraffin Block) مع تقرير الباثولوجي؛ لا يشترط صيام المريض (فحص مناعي نسيجي IHC لتشخيص أورام الغدد الصماء العصبية NETs).`
+    },
+    {
+        name: "صبغة مناعية نسيجية للكروموجرانين (IHC: Chromogranin A) [2160017]",
+        test: (t) => /ihc\s*chromogranin|chromogranin(?!.*serum)/i.test(t),
+        getNotes: () => `إحضار بلوك البرافين النسيجي (Paraffin Block) مع تقرير الباثولوجي (أو عينة سيرم صائم مع إيقاف أدوية المعدة PPIs لمدة أسبوعين في حال طلبه بالدم)؛ لتشخيص أورام الغدد الصماء العصبية (NETs).`
+    },
+    {
+        name: "هرمون النورإبينفرين بالدم مستلقياً وواقفاً (Serum Norepinephrine -NE- Supine & 15 min Standing) [V13-626]",
+        test: (t) => /serum\s*ne\b|norepinephrine|supine\s*and\s*15\s*minutes\s*after\s*standing/i.test(t),
+        getNotes: () => `الامتناع عن القهوة والشاي والشوكولاتة والموز والفانيليا والمشروبات الغازية والتدخين لمدة 72 ساعة قبل الفحص؛ يستلقي المريض بهدوء تام لمدة 30 دقيقة لسحب العينة الأولى (Supine)، ثم يقف لمدة 15 دقيقة لسحب العينة الثانية (Standing) في أنابيب مبرّدة وتفصل فوراً.`
+    },
+    {
+        name: "الأجسام المضادة للسيترولين الحلقي / الروماتويد المبكر (ANTI-CCP) [V13-256]",
+        test: (t) => /anti[-_ ]?ccp|cyclic\s*citrullinated/i.test(t),
+        getNotes: () => `سيرم دم (200 µL) لا يشترط الصيام؛ الفحص المناعي الأدق للتشخيص المبكر لمرض التهاب المفاصل الروماتويدي.`
+    },
+    {
+        name: "البوتاسيوم في مصل الدم (POTASSIUM IN SERUM - K+) [204073]",
+        test: (t) => /potassium\s*in\s*serum|serum\s*potassium|serum\s*k\b|(?<!urine\s*)\bpotassium\b(?!.*urine)|204073|بوتاسيوم/i.test(t),
+        getNotes: () => `سيرم غير متحلل (Non-hemolyzed serum)، لا يشترط الصيام، مع تجنب قبض وبسط اليد المتكرر أو ربط التورنيكيه لفترة طويلة أثناء السحب لمنع الارتفاع الكاذب للبوتاسيوم.`
+    },
+    {
+        name: "الصوديوم في مصل الدم (Sodium in Serum - Na+) [204088]",
+        test: (t) => /serum\s*na\b|sodium\s*in\s*serum|serum\s*sodium|(?<!urine\s*)\bsodium\b(?!.*urine)|صوديوم\s*بالدم/i.test(t),
+        getNotes: () => `سيرم غير متحلل (300 µL) لا يشترط الصيام؛ لتقييم توازن السوائل والأملاح ووظائف الكلى والغدة الكظرية.`
+    },
+    {
+        name: "الهوموسيستين في الدم (Serum Homocysteine) [V13-533]",
+        test: (t) => /homocyst?eine|h[o0]m[o0]cyst|هوموسيستين/i.test(t),
+        getNotes: () => `صيام من 8 إلى 10 ساعات، تسحب عينة سيرم أو بلازما EDTA وتوضع على الثلج وتُفصل فوراً بعد السحب مباشرة (خلال أقل من 30 دقيقة) لمنع الارتفاع الكاذب الناتج عن كريات الدم الحمراء.`
+    }
 ];
