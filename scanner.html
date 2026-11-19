@@ -2700,10 +2700,13 @@
     let lastGeminiError = "";
 
     // استدعاء الذكاء الاصطناعي عبر Cloudflare Worker الآمن (المفتاح محفوظ سرياً على سيرفر Cloudflare)
-    async function callGeminiBackend(contentsPayload, genCfg, timeoutMs = 15000) {
+    async function callGeminiBackend(contentsPayload, genCfg, timeoutMs = 30000) {
         lastGeminiError = "";
         const workerUrl = getActiveWorkerUrl();
-        if (!workerUrl) return null;
+        if (!workerUrl) {
+            lastGeminiError = "رابط الـ Worker غير مضبوط";
+            return null;
+        }
 
         const ctrl = new AbortController();
         const tm = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -2718,16 +2721,27 @@
                 })
             });
             clearTimeout(tm);
+            const rawBody = await res.text();
             if (res.ok) {
-                const data = await res.json();
-                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                if (text) return text;
+                try {
+                    const data = JSON.parse(rawBody);
+                    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    if (text) return text;
+                    lastGeminiError = "رد فارغ من Gemini";
+                } catch (e) {
+                    lastGeminiError = "تنسيق رد غير صالح من السيرفر";
+                }
             } else {
-                lastGeminiError = `HTTP ${res.status}`;
+                let detail = "";
+                try {
+                    const errJson = JSON.parse(rawBody);
+                    detail = errJson?.error?.message || errJson?.error || "";
+                } catch (e) {}
+                lastGeminiError = `HTTP ${res.status}${detail ? " - " + String(detail).slice(0, 120) : ""}`;
             }
         } catch (e) {
             clearTimeout(tm);
-            lastGeminiError = "network";
+            lastGeminiError = (e && e.name === "AbortError") ? "انتهى وقت الانتظار (Timeout 30s)" : `خطأ اتصال (${e?.message || "CORS/Network"})`;
         }
         return null;
     }
@@ -2887,25 +2901,26 @@
             return;
         }
 
-        // 2) في حال عدم اتصال Gemini Vision، نلجأ لمحرك OCR لقراءة الروشتات المطبوعة بالكمبيوتر
-        msg.innerText = "🔍 جاري القراءة الضوئية الاحتياطية ومطابقة بنك تحاليل DotCare...";
-        const [cloudOcrText, localTessText] = await Promise.all([
-            dualHandwritingAndPrintCloudOCR(base64Data),
-            runLocalTesseractOCR(cvs)
-        ]);
-
-        const combinedOcr = (cloudOcrText + "\n" + localTessText).trim();
-        if (combinedOcr.length > 0) {
-            matchExtractedTextAgainstDotCare(combinedOcr, isFemale, finalResults, seenSignatures);
+        // 2) إذا كان الجهاز بدون إنترنت (أوفلاين فقط)، نستخدم القراءة الضوئية المحلية
+        if (!navigator.onLine) {
+            msg.innerText = "🔍 وضع الأوفلاين: جاري القراءة المحلية ومطابقة بنك تحاليل DotCare...";
+            const localTessText = await runLocalTesseractOCR(cvs);
+            if (localTessText.trim().length > 0) {
+                matchExtractedTextAgainstDotCare(localTessText, isFemale, finalResults, seenSignatures);
+            }
+            if (finalResults.length > 0) {
+                scanMemoryCache.set(cacheKey, finalResults);
+                displayResults(finalResults, `⚡ وضع الأوفلاين — تم التطابق عبر DotCare (${finalResults.length} تحاليل)`);
+            } else {
+                displayResults([], "أنتِ في وضع الأوفلاين حالياً؛ يرجى الاتصال بالإنترنت لقراءة الروشتة بالذكاء الاصطناعي أو كتابة اسم التحليل في خانة البحث الفوري.");
+            }
+            overlay.style.display = "none";
+            return;
         }
 
-        if (finalResults.length > 0) {
-            scanMemoryCache.set(cacheKey, finalResults);
-            displayResults(finalResults, `⚡ تم التطابق عبر قاعدة بيانات نظام DotCare (${finalResults.length} تحاليل)`);
-        } else {
-            displayResults([], "لم يتم التعرف التلقائي على الخط؛ يمكنك تدوير الصورة والضغط على (إعادة الفحص) أو كتابة اسم التحليل في خانة (بحث فوري) بالأعلى.");
-        }
-
+        // في وضع الأونلاين: إذا لم يرد الذكاء الاصطناعي لا نلجأ للـ OCR العشوائي حتى لا تظهر تخاريف!
+        const errHint = lastGeminiError ? ` (${lastGeminiError})` : "";
+        displayResults([], `تعذر قراءة الروشتة عبر محرك الذكاء الاصطناعي حالياً${errHint}. يرجى إعادة المحاولة أو كتابة اسم التحليل في خانة البحث الفوري.`);
         overlay.style.display = "none";
     }
 
@@ -2939,7 +2954,7 @@
                     ]
                 }],
                 { temperature: 0.05, responseMimeType: "application/json" },
-                16000
+                30000
             );
             if (!rawText) return null;
 
