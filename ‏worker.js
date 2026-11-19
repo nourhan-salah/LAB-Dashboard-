@@ -1,10 +1,8 @@
-// Cloudflare Worker: وسيط آمن بين الصفحة و Gemini (المفتاح يبقى سرياً هنا)
-// المتغيرات المطلوبة في إعدادات الـ Worker:
-//   GEMINI_API_KEY  (Secret)  مفتاح Gemini الجديد
-//   ALLOWED_ORIGIN  (Text)    مثال: https://nourhan-salah.github.io  (بدون مسار وبدون / في الآخر)
-
-const MODEL = "gemini-3.8-flash";
-const MAX_BODY_BYTES = 6 * 1024 * 1024; // 6MB
+const MODELS = [
+  { id: "gemini-3.8-flash", cfg: { responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "low" } } },
+  { id: "gemini-3.5-flash-lite", cfg: { responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "minimal" } } }
+];
+const MAX_BODY_BYTES = 6 * 1024 * 1024;
 
 export default {
   async fetch(request, env) {
@@ -18,59 +16,43 @@ export default {
       "Vary": "Origin",
     };
 
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: cors });
-    }
-    if (request.method !== "POST") {
-      return json({ error: "Method not allowed" }, 405, cors);
-    }
-    if (!allowed) {
-      return json({ error: "Origin not allowed" }, 403, cors);
-    }
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+    if (request.method !== "POST") return json({ error: "Method not allowed" }, 405, cors);
+    if (!allowed) return json({ error: "Origin not allowed" }, 403, cors);
 
     const len = parseInt(request.headers.get("Content-Length") || "0", 10);
-    if (len > MAX_BODY_BYTES) {
-      return json({ error: "Payload too large" }, 413, cors);
-    }
+    if (len > MAX_BODY_BYTES) return json({ error: "Payload too large" }, 413, cors);
 
     let body;
-    try {
-      body = await request.json();
-    } catch {
-      return json({ error: "Invalid JSON" }, 400, cors);
-    }
-
-    // نمرّر فقط الحقول المسموحة (حماية من إساءة الاستخدام)
+    try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400, cors); }
     if (!Array.isArray(body.contents) || body.contents.length === 0) {
       return json({ error: "Missing contents" }, 400, cors);
     }
-    const payload = {
-      contents: body.contents,
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.1,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    };
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-    try {
-      const upstream = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY,
-        },
-        body: JSON.stringify(payload),
-      });
-      const text = await upstream.text();
-      return new Response(text, {
-        status: upstream.status,
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
-    } catch (e) {
-      return json({ error: "Upstream error" }, 502, cors);
+    let lastStatus = 502;
+    let lastText = JSON.stringify({ error: "Upstream error" });
+
+    for (const m of MODELS) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m.id}:generateContent`;
+      try {
+        const upstream = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": env.GEMINI_API_KEY,
+          },
+          body: JSON.stringify({ contents: body.contents, generationConfig: m.cfg }),
+        });
+        const text = await upstream.text();
+        if (upstream.ok) {
+          return new Response(text, { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
+        }
+        lastStatus = upstream.status;
+        lastText = text;
+      } catch (e) {}
     }
+
+    return new Response(lastText, { status: lastStatus, headers: { ...cors, "Content-Type": "application/json" } });
   },
 };
 
