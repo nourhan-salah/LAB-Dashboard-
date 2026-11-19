@@ -3,7 +3,7 @@
 //   GEMINI_API_KEY  (Secret)  مفتاح Gemini الجديد
 //   ALLOWED_ORIGIN  (Text)    مثال: https://nourhan-salah.github.io  (بدون مسار وبدون / في الآخر)
 
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.8-flash";
 const MAX_BODY_BYTES = 6 * 1024 * 1024; // 6MB
 
 export default {
