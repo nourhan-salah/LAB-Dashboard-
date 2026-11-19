@@ -942,7 +942,7 @@
     },
     {
         name: "اختبار الفحص الثلاثي للحوامل (TRIPLE MARKER TEST) [204099]",
-        test: (t) => /triple\s*marker|triple\s*screen|204099/i.test(t),
+        test: (t) => /triple\s*(marker|screen|test)|اختبار\s*(الفحص\s*)?(ال)?ثلاثي|204099/i.test(t),
         getNotes: () => `سيرم لا يحتاج الى صيام، يتم عمله بين 14 أسبوعاً إلى 22 أسبوعاً و6 أيام؛ يتطلب تاريخ الميلاد والوزن والسونار لتقييم متلازمة داون.`
     },
     {
@@ -1609,6 +1609,71 @@
     // القائمة الكاملة لتحاليل الويب (MEDICAL-TEST) مدمجة مع تحاليل الأبليكشن
     const primaryCommonRules = [
         {
+            name: "فحص خزعة الشفط بالإبرة الدقيقة باثولوجياً (Fine Needle Aspiration Biopsy - F.N.A.B / FNAC) [2160012]",
+            test: (t) => /fine\s*needle\s*aspiration|\bf\.?\s*n\.?\s*a\.?\s*[bc]\b|شفط\s*بال[إا]برة\s*الدقيقة/i.test(t),
+            getNotes: () => `يُجرى الإجراء بمعرفة الطبيب المختص؛ يرجى إحضار تقارير الأشعة والسونار السابقة، وإبلاغ الطبيب بأي أدوية سيولة أو أسبرين (قد يلزم إيقافها قبل الإجراء بالتنسيق مع الطبيب)، ولا يشترط الصيام إلا إذا طُلب تخدير. تُثبّت الشرائح الخلوية فوراً في كحول 95% (أو العينة النسيجية في فورمالين متعادل 10%).`
+        },
+        {
+            name: "فصيلة الدم وعامل ريزوس (Blood Group & Rh Factor) [209008]",
+            test: (t) => /blood\s*group|\babo\b.*\brh\b|فصيل[ةه]\s*الدم/i.test(t),
+            getNotes: () => `دم كامل على أنبوبة EDTA، لا يشترط الصيام؛ لتحديد فصيلة الدم (ABO) وعامل ريزوس (Rh).`
+        },
+        {
+            name: "مسحة ومزرعة ميكروب الميرسا (MRSA Screening Swab: Nasal / Axillary / Groin) [V13-885]",
+            test: (t) => /\bmrsa\b|methicillin\s*resistant|مسح[ةه]\s*(ال)?ميرسا/i.test(t),
+            getNotes: () => `تُؤخذ المسحة (من الأنف Nasal أو الإبط Axillary أو الفخذ Groin حسب المطلوب) على أنبوبة نقل معقمة (Transport Media)؛ يشترط تجنب استخدام المضادات الحيوية الموضعية (مثل كريمات الأنف) أو الغسول والصابون المطهّر (Chlorhexidine) لمدة 48 ساعة قبل أخذ المسحة.`
+        },
+        {
+            name: "مزرعة وحساسية البول (Urine Culture & Sensitivity) [V13-878]",
+            test: (t) => /urine\s*(culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*(ال)?بول/i.test(t),
+            getNotes: () => `يشترط التوقف عن تناول أي مضاد حيوي لمدة 48 إلى 72 ساعة قبل الفحص (مع كتابة اسم آخر مضاد حيوي إن وُجد). تُجمع أول عينة بول صباحية وسط المجرى (Mid-stream) في كوب معقم من المعمل بعد غسل المنطقة جيداً بالماء والصابون والتجفيف، وتُسلّم خلال ساعتين. في حالة وجود قسطرة بولية تُسحب العينة من الخرطوم وليس من الكيس.`
+        },
+        {
+            name: "مزرعة وحساسية البراز (Stool Culture & Sensitivity) [V13-879]",
+            test: (t) => /stool\s*(culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*(ال)?براز/i.test(t),
+            getNotes: () => `يشترط التوقف عن تناول أي مضاد حيوي لمدة 48 إلى 72 ساعة قبل الفحص. تُجمع عينة براز طازجة في كوب معقم مخصص من المعمل بدون اختلاط بالماء أو البول، وتُسلّم للمعمل خلال ساعتين على الأكثر.`
+        },
+        {
+            name: "مزرعة وحساسية الدم (Blood Culture & Sensitivity) [V13-880]",
+            test: (t) => /blood\s*(culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*(ال)?دم/i.test(t),
+            getNotes: () => `تُسحب العينة تحت تعقيم كامل ومشدد وتُحقن مباشرة في زجاجات مزرعة الدم الخاصة (يفضل سحبها وقت ارتفاع الحرارة وقبل البدء بأي مضاد حيوي بـ 48 ساعة). تُحفظ الزجاجات في درجة حرارة الغرفة (يُمنع وضعها في الثلاجة) وتُسلّم للمعمل فوراً.`
+        },
+        {
+            name: "مزرعة وحساسية البصاق / البلغم (Sputum Culture & Sensitivity) [V13-881]",
+            test: (t) => /sputum\s*(culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*(ال)?(بصاق|بلغم)/i.test(t),
+            getNotes: () => `يشترط التوقف عن المضادات الحيوية لمدة 48 إلى 72 ساعة. تُجمع أول عينة بصاق صباحية عميقة من الصدر (وليس لعاباً) بعد المضمضة بالماء فقط وقبل الأكل أو غسل الأسنان، داخل كوب معقم وتُسلّم للمعمل خلال ساعتين.`
+        },
+        {
+            name: "مزرعة وحساسية مسحة الحلق / اللوزتين (Throat / Pharyngeal Swab Culture) [V13-882]",
+            test: (t) => /throat\s*(swab|culture|c\s*[&\/]\s*s)|pharyngeal\s*swab|مزرع[ةه]\s*(ال)?حلق|مسح[ةه]\s*(ال)?حلق/i.test(t),
+            getNotes: () => `يشترط التوقف عن المضادات الحيوية لمدة 48 إلى 72 ساعة، والامتناع عن الأكل والشرب والمضمضة أو غسول الفم لمدة 4 ساعات على الأقل قبل أخذ المسحة في المعمل.`
+        },
+        {
+            name: "مزرعة وحساسية الجرح أو الصديد (Wound / Pus Swab Culture & Sensitivity) [V13-883]",
+            test: (t) => /(wound|pus|abscess|discharge)\s*(swab|culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*(ال)?(جرح|صديد)/i.test(t),
+            getNotes: () => `يشترط إيقاف المضادات الحيوية (الفموية والموضعية/الكريمات) وتجنب وضع المطهرات (مثل البيتادين أو الكحول) على الجرح لمدة 48 ساعة قبل أخذ المسحة؛ تُؤخذ العينة من عمق الجرح على أنبوبة نقل معقمة (Transport Media).`
+        },
+        {
+            name: "مزرعة وحساسية السائل المنوي (Semen Culture & Sensitivity) [V13-884]",
+            test: (t) => /semen\s*(culture|c\s*[&\/]\s*s)|seminal\s*culture|مزرع[ةه]\s*(ال)?سائل\s*(ال)?منوي/i.test(t),
+            getNotes: () => `يشترط التوقف عن المضادات الحيوية لمدة 48 إلى 72 ساعة، والامتناع عن القذف لمدة 3 إلى 5 أيام، والتبول ثم غسل اليدين والمنطقة جيداً بالماء والصابون والتجفيف قبل جمع العينة في كوب معقم وتسليمها للمعمل خلال ساعة.`
+        },
+        {
+            name: "مزرعة وحساسية المسحة المهبلية / عنق الرحم (Vaginal / Cervical Swab Culture) [V13-886]",
+            test: (t) => /(vaginal|hvs|cervical|endocervical)\s*(swab|culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*مهبلي[ةه]|مسح[ةه]\s*مهبلي[ةه]/i.test(t),
+            getNotes: () => `يشترط التوقف عن المضادات الحيوية واللبوس والكريمات والغسول المهبلي لمدة 48 إلى 72 ساعة، والامتناع عن الجماع لمدة 24 إلى 48 ساعة، وعدم إجراء المسحة أثناء فترة الدورة الشهرية.`
+        },
+        {
+            name: "مزرعة وحساسية مسحة الأذن أو العين أو الأنف (Ear / Eye / Nasal Swab Culture) [V13-887]",
+            test: (t) => /(ear|eye|conjunctival|nasal)\s*(swab|culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*(ال)?(أذن|اذن|عين|أنف|انف)/i.test(t),
+            getNotes: () => `يشترط التوقف عن القطرات والمراهم والمضادات الحيوية الموضعية والفموية لمدة 48 إلى 72 ساعة قبل أخذ المسحة على وسط نقل معقم.`
+        },
+        {
+            name: "مزرعة وحساسية سوائل الجسم (Body Fluid Culture: Ascitic / Pleural / CSF) [V13-888]",
+            test: (t) => /(ascitic|pleural|peritoneal|csf|body)\s*fluid\s*(culture|c\s*[&\/]\s*s)|مزرع[ةه]\s*سائل/i.test(t),
+            getNotes: () => `تُسحب العينة بمعرفة الطبيب المعالج تحت تعقيم كامل في أنابيب معقمة أو زجاجات مزارع الدم، وتُسلّم للمعمل فوراً في درجة حرارة الغرفة (يُمنع التبريد أو التجميد).`
+        },
+        {
             name: "الفحص الكروموسومي بالدم (Karyotyping - Chromosomal Analysis) [219001]",
             test: (t) => /karyotyp(e|ing)|chromosomal\s*analysis|فحص\s*الكروموسومات|خريطة\s*وراثية/i.test(t),
             getNotes: () => `دم كامل على أنبوبة هيبارين صوديوم أو ليثيوم (Sodium/Lithium Heparin - غطاء أخضر) في ظروف معقمة تماماً، لا يشترط الصيام، ويُحفظ في درجة حرارة الغرفة (يُمنع التجميد أو التبريد الشديد) مع إرفاق التاريخ المرضي.`
@@ -2160,6 +2225,9 @@
             if (isExternalExtra && /V13-491|Antithrombin/i.test(r.name)) {
                 r = { ...r, test: (t) => /antithrombin\s*(iii|3)|lupus\s*anticoagulant|(?<!pro)\bthrombin\s*time/i.test(t) };
             }
+            if (isExternalExtra && /V13-878|Microbial\s*Cultures/i.test(r.name)) {
+                return;
+            }
             const rKeys = extractRuleIdentityKeys(r.name);
             for (const k of rKeys) {
                 if (seenKeys.has(k)) return;
@@ -2700,7 +2768,7 @@
     let lastGeminiError = "";
 
     // استدعاء الذكاء الاصطناعي عبر Cloudflare Worker الآمن (المفتاح محفوظ سرياً على سيرفر Cloudflare)
-    async function callGeminiBackend(contentsPayload, genCfg, timeoutMs = 30000) {
+    async function callGeminiBackend(contentsPayload, genCfg, timeoutMs = 45000) {
         lastGeminiError = "";
         const workerUrl = getActiveWorkerUrl();
         if (!workerUrl) {
@@ -2741,7 +2809,7 @@
             }
         } catch (e) {
             clearTimeout(tm);
-            lastGeminiError = (e && e.name === "AbortError") ? "انتهى وقت الانتظار (Timeout 30s)" : `خطأ اتصال (${e?.message || "CORS/Network"})`;
+            lastGeminiError = (e && e.name === "AbortError") ? "انتهى وقت الانتظار (Timeout 45s)" : `خطأ اتصال (${e?.message || "CORS/Network"})`;
         }
         return null;
     }
@@ -2788,7 +2856,7 @@
                                     finalOut.push({
                                         test_name: item.test_name,
                                         instructions: item.instructions || "عينة معملية؛ يفضل مراجعة الطبيب المعالج بشأن الحاجة للصيام.",
-                                        is_critical_female: Boolean(item.is_critical_female),
+                                        is_critical_female: isFemale && /vitamin\s*d|25[-_ ]?oh|فيتامين\s*د/i.test(item.test_name),
                                         source: "استنتاج الذكاء الاصطناعي (Gemini AI)"
                                     });
                                 }
@@ -2932,18 +3000,16 @@
         }
         const gender = isFemale ? "أنثى" : "ذكر";
 
-        const promptText = `أنت استشاري معامل تحاليل طبية (Clinical Pathology AI Agent) خبير جداً في فك خط الأطباء (Doctor Handwriting) وقراءة الروشتات المطبوعة واستمارات التأمين الطبي (مثل GlobeMed و MetLife وغيرها) بالعربية والإنجليزية.
+        const promptText = `أنت استشاري معامل تحاليل طبية (Clinical Pathology AI Agent) خبير جداً في فك خط الأطباء وقراءة الروشتات المطبوعة واستمارات التأمين وفواتير الخدمات الطبية بأي اتجاه (حتى لو كانت الصورة مقلوبة 180 درجة أو مائلة).
 
-اتبع هذه القواعد الصارمة بدقة 100%:
-1. ركّز فقط على خانة "الخدمات الطبية المطلوبة / Requested Service / التحاليل المطلوبة / Rx".
-2. تجاهل تماماً قوائم التشخيص المطبوعة مسبقاً (مثل مربعات التشخيص غير المؤشر عليها في أعلى استمارة GlobeMed مثل Vitamin D deficiency أو Anemia أو Diabetes)، وتجاهل خانة التشخيص (Diagnosis مثل Proteinuria)، وتجاهل الأدوية العلاجية وفحوصات الأشعة (MRI, CT, X-Ray, Ultrasound) وأسماء الأطباء والتواريخ.
-3. إذا كانت استمارة معمل بها مربعات اختيار (Checkboxes)، استخرج فقط التحاليل المؤشر عليها بعلامة صح (✓ أو ☑).
-4. اقرأ خط اليد الطبي بعناية فائقة (أمثلة: Urine Immunofixation، Depakine / نسبة ديباكين، CBC, PT, PTT, INR, AST, ALT, Urea, Creat, HbA1c, Lipid Profile, Free T3/T4, TSH) واكتب الاسم العلمي الصحيح بالإنجليزية والعربية.
-5. لا تكرر نفس التحليل مرتين أبداً، ولا تخترع أي تحليل غير مكتوب فعلياً في خانة التحاليل المطلوبة.
-6. لكل تحليل مكتشف، اكتب شروط التحضير وسحب العينة الدقيقة بالعربية لحالة (${gender}) (نوع العينة: سيرم/بلازما/بول 24 ساعة/براز، الصيام وساعاته، وأي احترازات طبية خاصة).
+القواعد الصارمة:
+1. استخرج جميع التحاليل المعملية، والمزارع والمسحات (Cultures & Swabs مثل MRSA Swab، Urine/Stool/Blood/Sputum/Wound/Throat/Vaginal Culture)، وفحوصات الباثولوجي والخزعات والعينات بالإبرة الدقيقة (مثل Fine Needle Aspiration Biopsy / F.N.A.B / Small Biopsy / IHC) الموجودة في خانة "الخدمات المطلوبة / Requested Service / Procedure / Services / Rx".
+2. تجاهل تماماً: مربعات التشخيص المطبوعة غير المؤشر عليها (مثل Vitamin D deficiency في أعلى استمارات GlobeMed)، وخانة التشخيص (Diagnosis)، والمستلزمات الطبية (مثل Syringe، Gauze، Gloves/جوانتي، Debocaine/مخدر)، والأدوية العلاجية، وفحوصات الأشعة والسونار والدوبلر (MRI, CT, X-Ray, Ultrasound, Doppler).
+3. إذا كانت استمارة بها مربعات اختيار (Checkboxes)، استخرج فقط التحاليل المؤشر عليها بعلامة صح (✓ أو ☑).
+4. لا تكرر نفس التحليل مرتين، واكتب شروط التحضير في جملة واحدة قصيرة ومختصرة جداً بالعربية لحالة (${gender}) لتسريع الاستجابة.
 
-أخرج النتيجة بصيغة JSON Array فقط بدون أي نص إضافي أو markdown:
-[{"en_key":"Standard English Lab Test Name","test_name":"اسم التحليل بالعربية (Standard English Name)","instructions":"شروط التحضير وسحب العينة بالتفصيل بالعربية","is_critical_female":false}]`;
+أخرج JSON Array فقط بدون أي نص إضافي أو markdown:
+[{"en_key":"Standard English Test/Culture/Biopsy Name","test_name":"الاسم بالعربية (English Name)","instructions":"شرط تحضير مختصر في سطر واحد","is_critical_female":false}]`;
 
         try {
             const rawText = await callGeminiBackend(
@@ -2953,8 +3019,8 @@
                         { inlineData: { mimeType: mimeType, data: base64Image } }
                     ]
                 }],
-                { temperature: 0.05, responseMimeType: "application/json" },
-                30000
+                { responseMimeType: "application/json" },
+                45000
             );
             if (!rawText) return null;
 
@@ -2989,7 +3055,7 @@
                     addUniqueTestResult(finalMerged, seenSigs, {
                         test_name: displayTitle,
                         instructions: notes,
-                        is_critical_female: Boolean(aiItem.is_critical_female),
+                        is_critical_female: isFemale && /vitamin\s*d|25[-_ ]?oh|فيتامين\s*د/i.test(displayTitle),
                         source: "استنتاج الذكاء الاصطناعي (Gemini AI)"
                     });
                 }
@@ -3113,7 +3179,7 @@
                 card.innerHTML = `
                     <h4>📋 ${item.test_name}</h4>
                     <p>${item.instructions}</p>
-                    ${(item.is_critical_female && !hasInlineAlert) ? '<div class="alert-box">⚠️ تنبيه خاص بالحالة (أنثى): مراعاة موعد الدورة الشهرية (السحب بعدها بـ 48 ساعة)</div>' : ''}
+                    ${(item.is_critical_female && /vitamin\s*d|25[-_ ]?oh|فيتامين\s*د/i.test(item.test_name || '') && !hasInlineAlert) ? '<div class="alert-box">⚠️ تنبيه خاص بالحالة (أنثى): لا يتم السحب أثناء فترة الدورة الشهرية (البريود)، ويتم السحب بعد الانتهاء منها بـ 48 ساعة.</div>' : ''}
                     ${item.source ? `<span style="font-size:0.75rem; color:#888; display:block; margin-top:6px;">المصدر: ${item.source}</span>` : ''}
                 `;
                 listDiv.appendChild(card);
