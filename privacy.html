@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#115e59">
+    <link rel="icon" type="image/png" href="./icon-192.png">
+    <title>سياسة الخصوصية | Privacy Policy - LAB Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(180deg, #0d5c58 0%, #063836 100%);
+            --primary: #00bfa5;
+            --accent: #f59e0b;
+            --card-bg: #114b48;
+            --text-main: #ffffff;
+            --text-sub: #b2dfdb;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-main);
+            padding: 0 0 60px 0;
+            line-height: 1.75;
+        }
+        .top-bar {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 20px 16px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 7px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.2); }
+        .lang-switch {
+            display: inline-flex;
+            gap: 6px;
+            background: rgba(0,0,0,0.25);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .lang-btn {
+            background: transparent;
+            color: var(--text-sub);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .lang-btn.active {
+            background: var(--primary);
+            color: #00332c;
+        }
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 10px 16px 0;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+        header img {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            border: 2px solid rgba(245,158,11,0.65);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            margin: 0 auto 10px;
+            display: block;
+        }
+        header h1 {
+            font-size: 1.45rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        header p {
+            font-size: 0.86rem;
+            color: var(--text-sub);
+        }
+        .policy-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 22px 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+        }
+        .policy-card h2 {
+            color: var(--accent);
+            font-size: 1.08rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .policy-card p {
+            font-size: 0.92rem;
+            color: #e0f2f1;
+            margin-bottom: 10px;
+        }
+        .policy-card ul {
+            padding-inline-start: 20px;
+            margin-bottom: 10px;
+        }
+        .policy-card li {
+            font-size: 0.9rem;
+            color: #e0f2f1;
+            margin-bottom: 6px;
+        }
+        .policy-card strong { color: #ffffff; }
+        .badge-date {
+            display: inline-block;
+            background: rgba(0, 191, 165, 0.18);
+            border: 1px solid rgba(0, 191, 165, 0.4);
+            color: #99f6e4;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+        .en-section {
+            direction: ltr;
+            text-align: left;
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px dashed rgba(255,255,255,0.22);
+        }
+        a.inline-link {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        a.inline-link:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+        footer {
+            margin-top: 32px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 16px;
+            font-size: 0.82rem;
+            color: var(--text-sub);
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <a href="./index.html" class="btn-back">
+        <span>➡️</span> <span>العودة للدليل الرئيسي</span>
+    </a>
+    <div class="lang-switch" role="tablist" aria-label="Language">
+        <button type="button" class="lang-btn active" id="btnBoth" onclick="setView('both')">عربي + EN</button>
+        <button type="button" class="lang-btn" id="btnAr" onclick="setView('ar')">العربية</button>
+        <button type="button" class="lang-btn" id="btnEn" onclick="setView('en')">English</button>
+    </div>
+</div>
+
+<div class="container">
+    <header>
+        <img src="./icon-192.png" onerror="this.style.display='none'" alt="LAB Dashboard Logo">
+        <h1>سياسة الخصوصية | Privacy Policy</h1>
+        <p>تطبيق الدليل والماسح الذكي لتحضيرات التحاليل الطبية (LAB Dashboard)</p>
+        <span class="badge-date">آخر تحديث / Last Updated: 20 November 2026</span>
+    </header>
+
+    <!-- النسخة العربية -->
+    <section id="arContent">
+        <div class="policy-card">
+            <h2>1. مقدمة ونطاق التطبيق</h2>
+            <p>يحترم تطبيق <strong>LAB Dashboard (الماسح الذكي لتحضيرات التحاليل الطبية)</strong> خصوصية جميع المستخدمين. توضح هذه السياسة كيفية تعامل التطبيق مع الصور والأذونات عند استخدام ميزة فحص الروشتات والبحث عن شروط تحضير التحاليل الطبية.</p>
+        </div>
+
+        <div class="policy-card">
+            <h2>2. البيانات التي لا نقوم بجمعها</h2>
+            <ul>
+                <li>لا يتطلب التطبيق إنشاء حساب أو تسجيل دخول، ولا يجمع أي بيانات شخصية مثل الاسم أو رقم الهاتف أو البريد الإلكتروني أو الموقع الجغرافي.</li>
+                <li>لا يستخدم التطبيق أي إعلانات تجارية أو أدوات تتبع إعلانية تابعة لجهات خارجية.</li>
+            </ul>
+        </div>
+
+        <div class="policy-card">
+            <h2>3. استخدام الكاميرا ومعرض الصور</h2>
+            <ul>
+                <li>يطلب التطبيق إذن <strong>الكاميرا</strong> أو <strong>اختيار صورة من المعرض</strong> فقط عند ضغط المستخدم على زر تصوير أو رفع روشتة تحاليل.</li>
+                <li>تُستخدم الصورة بشكل فوري ومؤقت فقط لاستخراج أسماء التحاليل الطبية ومطابقتها مع شروط التحضير المعملية.</li>
+                <li>عند الاتصال بالإنترنت، تُرسل الصورة عبر اتصال مشفّر (HTTPS) إلى خدمة الذكاء الاصطناعي (Google Gemini API) عبر خادم وسيط آمن (Cloudflare Workers) لغرض قراءة أسماء التحاليل فقط، ولا يتم تخزين الصور أو حفظها في أي قاعدة بيانات أو مشاركتها مع أي أطراف تسويقية.</li>
+                <li>يُفضّل تغطية أو قص أي بيانات شخصية للمريض (مثل الاسم أو الرقم القومي) قبل تصوير الروشتة حفاظاً على خصوصيته.</li>
+            </ul>
+        </div>
+
+        <div class="policy-card">
+            <h2>4. التخزين المحلي والعمل بدون إنترنت</h2>
+            <p>يخزّن التطبيق ملفات الواجهة وقواعد شروط التحاليل محلياً على جهازك (عبر ذاكرة المتصفح المؤقتة Service Worker) لتسريع الأداء وتمكين البحث الفوري عن التحاليل حتى في حال ضعف أو انقطاع الإنترنت، ويمكنك مسح هذه البيانات في أي وقت من إعدادات المتصفح أو التطبيق.</p>
+        </div>
+
+        <div class="policy-card">
+            <h2>5. إخلاء المسؤولية الطبي</h2>
+            <p>شروط تحضير التحاليل المعروضة داخل التطبيق هي لأغراض الإرشاد والتوعية المرجعية فقط، ولا تغني عن تعليمات الطبيب المعالج أو أخصائي المعمل المختص وفقاً لحالة كل مريض.</p>
+        </div>
+
+        <div class="policy-card">
+            <h2>6. خصوصية الأطفال والتواصل</h2>
+            <p>التطبيق موجّه للأغراض المهنية والإرشادية الطبية ولا يجمع أي بيانات من الأطفال دون سن 13 عاماً. لأي استفسار أو طلب يتعلق بالخصوصية، يمكنك التواصل مع المطوّرة <strong>نورهان صلاح (Nourhan Salah)</strong> عبر الصفحة الرسمية: <a class="inline-link" href="https://nourhan-salah.github.io/nour-portfolio/" target="_blank" rel="noopener noreferrer">nourhan-salah.github.io/nour-portfolio</a>.</p>
+        </div>
+    </section>
+
+    <!-- English Version (for Store Reviewers: Samsung Galaxy Store, Huawei AppGallery, Uptodown, Google Play) -->
+    <section id="enContent" class="en-section">
+        <div class="policy-card">
+            <h2>1. Overview</h2>
+            <p><strong>LAB Dashboard (Smart Lab Test Preparation Scanner)</strong> respects your privacy. This Privacy Policy explains how the application handles permissions and prescription images when identifying medical laboratory test names and displaying preparation instructions.</p>
+        </div>
+
+        <div class="policy-card">
+            <h2>2. Information We Do Not Collect</h2>
+            <ul>
+                <li>No user registration or sign-in is required. We do not collect, store, or sell personally identifiable information (such as your name, email address, phone number, or precise location).</li>
+                <li>The application contains no third-party advertising networks or behavioral tracking SDKs.</li>
+            </ul>
+        </div>
+
+        <div class="policy-card">
+            <h2>3. Camera, Gallery &amp; Image Processing</h2>
+            <ul>
+                <li>Access to the device <strong>Camera</strong> or <strong>Photo Gallery</strong> is requested strictly when you choose to capture or select a laboratory request image.</li>
+                <li>Selected images are processed transiently in real time solely to extract lab test names and match them with preparation rules.</li>
+                <li>When online, the image is transmitted over an encrypted HTTPS connection via a secure proxy (Cloudflare Workers) to the Google Gemini API solely for optical text/test recognition. Images are <strong>not stored</strong> on our servers, databases, or shared for marketing purposes.</li>
+                <li>Users are encouraged to crop or cover patient personal identifiers before scanning any document.</li>
+            </ul>
+        </div>
+
+        <div class="policy-card">
+            <h2>4. Local Storage &amp; Offline Support</h2>
+            <p>Static application assets and laboratory preparation reference rules are cached locally on your device (via browser cache / Service Worker) to provide fast loading and offline test lookup. You may clear this local data at any time through your device or browser settings.</p>
+        </div>
+
+        <div class="policy-card">
+            <h2>5. Medical Disclaimer</h2>
+            <p>Laboratory preparation instructions provided by this app are for general reference and educational guidance only and do not replace advice from a qualified physician or clinical laboratory specialist.</p>
+        </div>
+
+        <div class="policy-card">
+            <h2>6. Children's Privacy, Changes &amp; Contact</h2>
+            <p>This app does not knowingly collect personal information from children under 13. Any updates to this policy will be posted on this page with an updated revision date. For privacy questions, please contact the developer, <strong>Nourhan Salah</strong>, at: <a class="inline-link" href="https://nourhan-salah.github.io/nour-portfolio/" target="_blank" rel="noopener noreferrer">https://nourhan-salah.github.io/nour-portfolio/</a>.</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 جميع الحقوق محفوظة | تطوير: <a class="inline-link" href="https://nourhan-salah.github.io/nour-portfolio/" target="_blank" rel="noopener noreferrer">نورهان صلاح (Nourhan Salah)</a></p>
+    </footer>
+</div>
+
+<script>
+    function setView(mode) {
+        const ar = document.getElementById('arContent');
+        const en = document.getElementById('enContent');
+        document.getElementById('btnBoth').classList.toggle('active', mode === 'both');
+        document.getElementById('btnAr').classList.toggle('active', mode === 'ar');
+        document.getElementById('btnEn').classList.toggle('active', mode === 'en');
+        ar.style.display = (mode === 'both' || mode === 'ar') ? 'block' : 'none';
+        en.style.display = (mode === 'both' || mode === 'en') ? 'block' : 'none';
+        en.style.borderTop = (mode === 'both') ? '1px dashed rgba(255,255,255,0.22)' : 'none';
+        en.style.marginTop = (mode === 'both') ? '28px' : '0';
+        en.style.paddingTop = (mode === 'both') ? '22px' : '0';
+    }
+</script>
+</body>
+</html>
