@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تحميل وتثبيت تطبيق LAB Dashboard — أندرويد و iOS والكمبيوتر</title>
+  <link rel="icon" href="icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark: #031c1b;
+      --bg-mid: #063331;
+      --card-bg: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.14);
+      --teal: #14b8a6;
+      --teal-dark: #0f766e;
+      --gold: #f59e0b;
+      --gold-soft: #fde68a;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top, #0b4a46 0%, var(--bg-dark) 65%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+      line-height: 1.65;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand-mini {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .brand-mini img {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1.5px solid var(--gold);
+    }
+    .lang-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .lang-btn:hover { background: rgba(255, 255, 255, 0.18); }
+
+    .hero {
+      text-align: center;
+      padding: 28px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 24px;
+    }
+    .hero-icon {
+      width: 92px;
+      height: 92px;
+      border-radius: 22px;
+      border: 2.5px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      margin-bottom: 14px;
+    }
+    .hero h1 {
+      font-size: clamp(24px, 4vw, 34px);
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .hero p {
+      color: var(--muted);
+      max-width: 650px;
+      margin: 0 auto 16px;
+      font-size: 15px;
+    }
+    .device-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245, 158, 11, 0.16);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: var(--gold-soft);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 20px;
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+      position: relative;
+    }
+    .card.recommended {
+      border-color: var(--gold);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+    .rec-tag {
+      display: none;
+      position: absolute;
+      top: -12px;
+      inset-inline-start: 18px;
+      background: var(--gold);
+      color: #0f172a;
+      font-size: 11.5px;
+      font-weight: 900;
+      padding: 2px 12px;
+      border-radius: 999px;
+    }
+    .card.recommended .rec-tag { display: inline-block; }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .os-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: rgba(20, 184, 166, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .card h2 { font-size: 19px; font-weight: 800; }
+    .card .sub { font-size: 12.5px; color: var(--muted); }
+    .steps {
+      list-style: none;
+      margin: 12px 0 18px;
+      font-size: 13.5px;
+      color: #e2e8f0;
+    }
+    .steps li {
+      margin-bottom: 7px;
+      padding-inline-start: 18px;
+      position: relative;
+    }
+    .steps li::before {
+      content: "•";
+      color: var(--teal);
+      font-weight: 900;
+      position: absolute;
+      inset-inline-start: 0;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 14.5px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn:hover { opacity: 0.93; transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(135deg, #10b981, #0f766e); color: #fff; }
+    .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; }
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 16px;
+    }
+    .footer a { color: var(--gold-soft); text-decoration: none; font-weight: 700; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="brand-mini" href="./index.html">
+        <img src="icon-192.png" alt="LAB Dashboard" />
+        <span>LAB Dashboard</span>
+      </a>
+      <button class="lang-btn" id="langToggle" onclick="toggleLang()">English</button>
+    </div>
+
+    <section class="hero">
+      <img class="hero-icon" src="icon-512.png" alt="LAB Dashboard Icon" />
+      <h1 data-ar="تحميل وتثبيت LAB Dashboard" data-en="Download & Install LAB Dashboard">تحميل وتثبيت LAB Dashboard</h1>
+      <p data-ar="الدليل الذكي لتحضيرات التحاليل الطبية وماسح الروشتات بالذكاء الاصطناعي — متاح لجميع الأجهزة (أندرويد، آيفون، والكمبيوتر) بتجربة مجانية 30 يومًا."
+         data-en="Smart medical lab test preparation guide & AI prescription scanner — available for Android, iOS (iPhone/iPad), and Desktop with a 30-day free trial.">
+        الدليل الذكي لتحضيرات التحاليل الطبية وماسح الروشتات بالذكاء الاصطناعي — متاح لجميع الأجهزة (أندرويد، آيفون، والكمبيوتر) بتجربة مجانية 30 يومًا.
+      </p>
+      <div class="device-badge" id="deviceBanner">🔍 جاري التعرف على نظام جهازك...</div>
+    </section>
+
+    <section class="grid">
+      <!-- Android Card -->
+      <article class="card" id="card-android">
+        <span class="rec-tag" data-ar="مناسب لجهازك" data-en="Best for your device">مناسب لجهازك</span>
+        <div>
+          <div class="card-head">
+            <div class="os-icon">🤖</div>
+            <div>
+              <h2 data-ar="أندرويد (Android)" data-en="Android (APK)">أندرويد (Android)</h2>
+              <div class="sub" data-ar="ملف تطبيق مباشر (APK)" data-en="Direct Android App Package">ملف تطبيق مباشر (APK)</div>
+            </div>
+          </div>
+          <ul class="steps">
+            <li data-ar="اضغط على زر التحميل لتنزيل ملف LAB-Dashboard.apk الرسمي من GitHub." data-en="Tap Download to get the official LAB-Dashboard.apk from GitHub Releases.">اضغط على زر التحميل لتنزيل ملف LAB-Dashboard.apk الرسمي من GitHub.</li>
+            <li data-ar="افتح الملف بعد التحميل ووافق على التثبيت (Install)." data-en="Open the downloaded file and confirm installation.">افتح الملف بعد التحميل ووافق على التثبيت (Install).</li>
+            <li data-ar="يحتوي على قاعدة التحاليل المحلية والماسح الذكي مباشرة." data-en="Includes the built-in local lab database and AI scanner.">يحتوي على قاعدة التحاليل المحلية والماسح الذكي مباشرة.</li>
+          </ul>
+        </div>
+        <a class="btn btn-primary" href="https://github.com/nourhan-salah/LAB-Dashboard-/releases/latest/download/LAB-Dashboard.apk"
+           data-ar="⬇️ تحميل تطبيق أندرويد (APK)" data-en="⬇️ Download Android APK">⬇️ تحميل تطبيق أندرويد (APK)</a>
+      </article>
+
+      <!-- iOS Card -->
+      <article class="card" id="card-ios">
+        <span class="rec-tag" data-ar="مناسب لجهازك" data-en="Best for your device">مناسب لجهازك</span>
+        <div>
+          <div class="card-head">
+            <div class="os-icon">🍎</div>
+            <div>
+              <h2 data-ar="آيفون وآيباد (iOS)" data-en="iPhone & iPad (iOS)">آيفون وآيباد (iOS)</h2>
+              <div class="sub" data-ar="تثبيت فوري عبر Safari بدون App Store" data-en="Instant Safari Web App Install">تثبيت فوري عبر Safari بدون App Store</div>
+            </div>
+          </div>
+          <ul class="steps">
+            <li data-ar="افتح التطبيق في متصفح Safari عبر الزر بالأسفل." data-en="Open the app in Safari using the button below.">افتح التطبيق في متصفح Safari عبر الزر بالأسفل.</li>
+            <li data-ar="اضغط على أيقونة المشاركة (Share ⬆️) أسفل الشاشة." data-en="Tap the Share icon (⬆️) at the bottom of Safari.">اضغط على أيقونة المشاركة (Share ⬆️) أسفل الشاشة.</li>
+            <li data-ar="اختر «إضافة إلى الشاشة الرئيسية» (Add to Home Screen)." data-en="Select 'Add to Home Screen' and tap Add.">اختر «إضافة إلى الشاشة الرئيسية» (Add to Home Screen).</li>
+          </ul>
+        </div>
+        <a class="btn btn-gold" href="./index.html"
+           data-ar="🚀 فتح وتثبيت على آيفون (iOS)" data-en="🚀 Open & Install on iOS">🚀 فتح وتثبيت على آيفون (iOS)</a>
+      </article>
+
+      <!-- Desktop Card -->
+      <article class="card" id="card-desktop">
+        <span class="rec-tag" data-ar="مناسب لجهازك" data-en="Best for your device">مناسب لجهازك</span>
+        <div>
+          <div class="card-head">
+            <div class="os-icon">💻</div>
+            <div>
+              <h2 data-ar="كمبيوتر (Windows / Mac)" data-en="Desktop (Windows / Mac)">كمبيوتر (Windows / Mac)</h2>
+              <div class="sub" data-ar="تطبيق سطح مكتب عبر Chrome أو Edge" data-en="Desktop App via Chrome or Edge">تطبيق سطح مكتب عبر Chrome أو Edge</div>
+            </div>
+          </div>
+          <ul class="steps">
+            <li data-ar="افتح التطبيق في متصفح Google Chrome أو Microsoft Edge." data-en="Open the app in Google Chrome or Microsoft Edge.">افتح التطبيق في متصفح Google Chrome أو Microsoft Edge.</li>
+            <li data-ar="اضغط على أيقونة التثبيت (🖥️⬇️) في شريط العنوان بالأعلى أو زر «تثبيت التطبيق»." data-en="Click the Install icon (🖥️⬇️) in the address bar or the 'Install App' button.">اضغط على أيقونة التثبيت (🖥️⬇️) في شريط العنوان بالأعلى أو زر «تثبيت التطبيق».</li>
+            <li data-ar="سيعمل في نافذة مستقلة مع أيقونة على سطح المكتب." data-en="Runs in its own standalone window with a desktop shortcut.">سيعمل في نافذة مستقلة مع أيقونة على سطح المكتب.</li>
+          </ul>
+        </div>
+        <a class="btn btn-outline" href="./index.html"
+           data-ar="🌐 فتح وتثبيت على الكمبيوتر" data-en="🌐 Open & Install on Desktop">🌐 فتح وتثبيت على الكمبيوتر</a>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <div data-ar="تطوير: أ/ نورهان صلاح (Nourhan Salah)" data-en="Developed by Nourhan Salah">تطوير: أ/ نورهان صلاح (Nourhan Salah)</div>
+      <div style="margin-top:6px;">
+        <a href="./index.html" data-ar="فتح التطبيق مباشرة" data-en="Open Web App">فتح التطبيق مباشرة</a>
+        &nbsp;•&nbsp;
+        <a href="./privacy.html" data-ar="سياسة الخصوصية" data-en="Privacy Policy">سياسة الخصوصية</a>
+        &nbsp;•&nbsp;
+        <a href="https://github.com/nourhan-salah/LAB-Dashboard-/releases" target="_blank" data-ar="إصدارات GitHub" data-en="GitHub Releases">إصدارات GitHub</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    let currentLang = 'ar';
+
+    function detectOS() {
+      const ua = navigator.userAgent || '';
+      if (/Android/i.test(ua)) return 'android';
+      if (/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
+      return 'desktop';
+    }
+
+    function updateDeviceBanner() {
+      const os = detectOS();
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('recommended'));
+      const target = document.getElementById('card-' + os);
+      if (target) target.classList.add('recommended');
+
+      const banner = document.getElementById('deviceBanner');
+      const labels = {
+        android: { ar: '✅ جهازك الحالي: أندرويد — يمكنك تحميل ملف APK مباشرة', en: '✅ Detected: Android — Download the APK directly below' },
+        ios: { ar: '✅ جهازك الحالي: آيفون / آيباد — ثبّت التطبيق من Safari', en: '✅ Detected: iOS — Install instantly via Safari' },
+        desktop: { ar: '✅ جهازك الحالي: كمبيوتر — ثبّت التطبيق من Chrome أو Edge', en: '✅ Detected: Desktop — Install via Chrome or Edge' }
+      };
+      banner.textContent = labels[os][currentLang];
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'ar' ? 'en' : 'ar';
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+      document.getElementById('langToggle').textContent = currentLang === 'ar' ? 'English' : 'العربية';
+      document.querySelectorAll('[data-ar]').forEach(el => {
+        el.textContent = el.getAttribute('data-' + currentLang);
+      });
+      updateDeviceBanner();
+    }
+
+    updateDeviceBanner();
+  </script>
+</body>
+</html>
