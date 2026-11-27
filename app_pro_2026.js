@@ -13,14 +13,14 @@ const NS_APP_CONFIG = {
     "HW-00000000"
   ],
   pricing: {
-    annualUSD: "$9.99 / Year",
-    annualUSD_Ar: "$9.99 / سنوياً",
-    annualEGP: "300 EGP / Year",
-    annualEGP_Ar: "300 ج.م / سنوياً",
-    lifetimeUSD: "$19.99 (Lifetime)",
-    lifetimeUSD_Ar: "$19.99 (شراء مدى الحياة)",
-    lifetimeEGP: "500 EGP (Lifetime)",
-    lifetimeEGP_Ar: "500 ج.م (شراء مدى الحياة)"
+    monthlyUSD: "$1.99 / Month",
+    monthlyUSD_Ar: "$1.99 / شهرياً",
+    monthlyEGP: "49 EGP / Month",
+    monthlyEGP_Ar: "49 ج.م / شهرياً",
+    annualUSD: "$14.99 / Year",
+    annualUSD_Ar: "$14.99 / سنوياً",
+    annualEGP: "399 EGP / Year",
+    annualEGP_Ar: "399 ج.م / سنوياً"
   }
 };
 
@@ -180,16 +180,35 @@ function getHardwareFingerprint() {
   return `HW-${hex.substring(0, 8)}`;
 }
 
-function generateActivationCode(hwId) {
-  const cleanId = (hwId || '').trim().toUpperCase();
-  const str = cleanId + "::PRO::" + NS_APP_CONFIG.secretSalt;
+function getCurrentPeriodStamp() {
+  const d = new Date(Date.now() + (typeof cachedTimeOffset === 'number' ? cachedTimeOffset : 0));
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}${m}`;
+}
+
+function computePlanHash(cleanId, planTag, periodStamp) {
+  const str = `${cleanId}::${planTag}::${periodStamp}::${NS_APP_CONFIG.secretSalt}`;
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash) + str.charCodeAt(i);
     hash |= 0;
   }
-  const codePart = Math.abs(hash).toString(36).toUpperCase().padStart(6, '9').substring(0, 6);
-  return `PRO-${codePart}`;
+  return Math.abs(hash).toString(36).toUpperCase().padStart(6, '9').substring(0, 6);
+}
+
+function generateTimedActivationCode(hwId, planType = 'monthly', periodStamp = null) {
+  const cleanId = (hwId || '').trim().toUpperCase();
+  if (!cleanId) return '';
+  const stamp = periodStamp || getCurrentPeriodStamp();
+  const prefix = planType === 'annual' ? 'PRY' : 'PRM';
+  const planTag = planType === 'annual' ? 'ANNUAL' : 'MONTHLY';
+  const codePart = computePlanHash(cleanId, planTag, stamp);
+  return `${prefix}-${stamp}-${codePart}`;
+}
+
+function generateActivationCode(hwId) {
+  return generateTimedActivationCode(hwId, 'annual');
 }
 
 function generateRejectCode(hwId) {
@@ -202,6 +221,28 @@ function generateRejectCode(hwId) {
   }
   const codePart = Math.abs(hash).toString(36).toUpperCase().padStart(6, '7').substring(0, 6);
   return `REJ-${codePart}`;
+}
+
+function getActiveProInfo(hwId, nowTs) {
+  const activated = localStorage.getItem('ns_smartlab_pro_activated');
+  if (activated !== hwId && activated !== 'TRUE') {
+    return { isPro: false, plan: null, proDaysLeft: 0, expiredPro: false };
+  }
+  const expiry = parseInt(localStorage.getItem('ns_smartlab_pro_expiry') || '0', 10);
+  const plan = localStorage.getItem('ns_smartlab_pro_plan') || 'annual';
+  if (!expiry) {
+    return { isPro: true, plan, proDaysLeft: 365, expiredPro: false };
+  }
+  const rem = expiry - nowTs;
+  if (rem <= 0) {
+    return { isPro: false, plan, proDaysLeft: 0, expiredPro: true };
+  }
+  return {
+    isPro: true,
+    plan,
+    proDaysLeft: Math.ceil(rem / (1000 * 60 * 60 * 24)),
+    expiredPro: false
+  };
 }
 
 // ============================================================================
@@ -277,9 +318,9 @@ let cachedTimeOffset = 0; // الفرق بين توقيت السيرفر وتو�
 
 function calculateTrialStatus() {
   const hwId = getHardwareFingerprint();
-  const isPro = localStorage.getItem('ns_smartlab_pro_activated') === hwId ||
-                localStorage.getItem('ns_smartlab_pro_activated') === 'TRUE';
   const now = Date.now() + cachedTimeOffset;
+  const proInfo = getActiveProInfo(hwId, now);
+  const isPro = proInfo.isPro;
   const firstOpen = cachedFirstOpenTime || now;
   const totalTrialMs = NS_APP_CONFIG.trialDays * 24 * 60 * 60 * 1000;
   const elapsedMs = Math.max(0, now - firstOpen);
@@ -290,7 +331,17 @@ function calculateTrialStatus() {
   const hoursLeftInDay = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minsLeftInHour = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
-  return { isPro, hwId, daysLeft, hoursLeftInDay, minsLeftInHour, remainingMs };
+  return {
+    isPro,
+    proPlan: proInfo.plan,
+    proDaysLeft: proInfo.proDaysLeft,
+    expiredPro: proInfo.expiredPro,
+    hwId,
+    daysLeft,
+    hoursLeftInDay,
+    minsLeftInHour,
+    remainingMs
+  };
 }
 
 // ============================================================================
@@ -311,8 +362,7 @@ function executeHardLockScreen(reasonTitleAr, reasonTitleEn, reasonDescAr, reaso
 
 async function initSmartLabProSystem() {
   const hwId = getHardwareFingerprint();
-  const isPro = localStorage.getItem('ns_smartlab_pro_activated') === hwId ||
-                localStorage.getItem('ns_smartlab_pro_activated') === 'TRUE';
+  const isPro = getActiveProInfo(hwId, Date.now()).isPro;
   const isRejectedLocal = localStorage.getItem('ns_smartlab_rejected') === 'TRUE' ||
                           NS_APP_CONFIG.blockedFingerprints.includes(hwId);
 
@@ -363,15 +413,24 @@ async function initSmartLabProSystem() {
 
 function updateTopBarAndCheckLock() {
   const status = calculateTrialStatus();
-  renderSubscriptionBar(status.isPro, status.daysLeft, status.hoursLeftInDay, status.minsLeftInHour, status.hwId);
+  renderSubscriptionBar(status.isPro, status.daysLeft, status.hoursLeftInDay, status.minsLeftInHour, status.hwId, status.proPlan, status.proDaysLeft);
 
-  if (!status.isPro && status.remainingMs <= 0) {
-    executeHardLockScreen(
-      "⏳ انتهت الفترة التجريبية المجانية (30 يوماً)",
-      "⏳ 30-Day Free Trial Expired",
-      "تم إغلاق البرنامج تلقائياً لانتهاء فترة الـ 30 يوماً المجانية لهذا الجهاز. يرجى التفعيل عبر InstaPay لإعادة فتح البرنامج.",
-      "The 30-day free trial for this device has ended. Please activate Pro via InstaPay to unlock the application."
-    );
+  if (!status.isPro && (status.expiredPro || status.remainingMs <= 0)) {
+    if (status.expiredPro) {
+      executeHardLockScreen(
+        "⏳ انتهت مدة اشتراكك المدفوع",
+        "⏳ Your Pro Subscription Expired",
+        "انتهت مدة اشتراكك الحالية. يرجى اختيار باقة شهرية أو سنوية والتجديد عبر InstaPay لاستمرار العمل.",
+        "Your current subscription has ended. Please choose a Monthly or Annual plan and renew via InstaPay."
+      );
+    } else {
+      executeHardLockScreen(
+        "⏳ انتهت الفترة التجريبية المجانية (30 يوماً)",
+        "⏳ 30-Day Free Trial Expired",
+        "تم إغلاق البرنامج تلقائياً لانتهاء فترة الـ 30 يوماً المجانية لهذا الجهاز. يرجى التفعيل عبر InstaPay لإعادة فتح البرنامج.",
+        "The 30-day free trial for this device has ended. Please activate Pro via InstaPay to unlock the application."
+      );
+    }
   }
 }
 
@@ -381,7 +440,31 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredInstallPrompt = e;
 });
 
-function renderSubscriptionBar(isPro, daysLeft, hoursLeft, minsLeft, hwId) {
+function isRunningAsInstalledApp() {
+  try {
+    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
+      return true;
+    }
+    if (window.Capacitor && window.Capacitor.platform && window.Capacitor.platform !== 'web') {
+      return true;
+    }
+    if (location.hostname === 'localhost' || location.protocol === 'capacitor:' || location.protocol === 'file:') {
+      return true;
+    }
+    if (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches)) {
+      return true;
+    }
+    if (window.navigator && window.navigator.standalone === true) {
+      return true;
+    }
+    if (document.referrer && document.referrer.startsWith('android-app://')) {
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function renderSubscriptionBar(isPro, daysLeft, hoursLeft, minsLeft, hwId, proPlan = 'annual', proDaysLeft = 0) {
   const isAr = isAppArabic();
   let bar = document.getElementById('ns-top-pro-bar');
   if (!bar) {
@@ -396,10 +479,12 @@ function renderSubscriptionBar(isPro, daysLeft, hoursLeft, minsLeft, hwId) {
     ? `الوقت المتبقي بالضبط: ${daysLeft - 1} يوم و ${hoursLeft} ساعة و ${minsLeft} دقيقة`
     : `Exact time remaining: ${daysLeft - 1}d ${hoursLeft}h ${minsLeft}m`;
 
+  const planLabelAr = proPlan === 'monthly' ? 'شهري' : 'سنوي';
+  const planLabelEn = proPlan === 'monthly' ? 'Monthly' : 'Annual';
   const badgeHtml = isPro
     ? (isAr
-        ? `<div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#fde047;"><span>👑</span><span>النسخة المدفوعة مفعلة لجهازك (${hwId}) - تعمل بدون إنترنت</span></div>`
-        : `<div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#fde047;"><span>👑</span><span>Pro Version Activated (${hwId}) - Full Offline Access</span></div>`)
+        ? `<div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#fde047;"><span>👑</span><span>النسخة المدفوعة (${planLabelAr}) - متبقي <b style="color:#fff;background:rgba(0,0,0,0.35);padding:1px 8px;border-radius:6px;">${proDaysLeft} يوم</b></span></div>`
+        : `<div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#fde047;"><span>👑</span><span>Pro (${planLabelEn}) - <b style="color:#fff;background:rgba(0,0,0,0.35);padding:1px 8px;border-radius:6px;">${proDaysLeft} Days</b> Left</span></div>`)
     : (isAr
         ? `<div title="${exactTooltip}" style="display:flex;align-items:center;gap:6px;font-weight:700;color:#fef08a;cursor:help;"><span>⏳</span><span>الفترة التجريبية المجانية: متبقي <b style="color:#fff;background:rgba(0,0,0,0.35);padding:1px 8px;border-radius:6px;">${daysLeft} يوم</b> (العمل بدون نت للمدفوع فقط)</span></div>`
         : `<div title="${exactTooltip}" style="display:flex;align-items:center;gap:6px;font-weight:700;color:#fef08a;cursor:help;"><span>⏳</span><span>Free Trial: <b style="color:#fff;background:rgba(0,0,0,0.35);padding:1px 8px;border-radius:6px;">${daysLeft} Days</b> Remaining (Offline mode for Pro only)</span></div>`);
@@ -414,9 +499,10 @@ function renderSubscriptionBar(isPro, daysLeft, hoursLeft, minsLeft, hwId) {
       <button onclick="openBookletRulesModal()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:5px 12px;border-radius:10px;cursor:pointer;font-family:Cairo,sans-serif;font-weight:700;font-size:12px;transition:0.2s;">
         ${rulesBtnLabel}
       </button>
+      ${!isRunningAsInstalledApp() ? `
       <button onclick="triggerAppInstall()" style="background:#0284c7;color:#fff;border:none;padding:5px 12px;border-radius:10px;cursor:pointer;font-family:Cairo,sans-serif;font-weight:700;font-size:12px;transition:0.2s;">
         ${installBtnLabel}
-      </button>
+      </button>` : ''}
       ${!isPro ? `
       <button onclick="openSubscriptionModal(false)" style="background:#f59e0b;color:#0f172a;border:none;padding:5px 14px;border-radius:10px;cursor:pointer;font-family:Cairo,sans-serif;font-weight:800;font-size:12px;box-shadow:0 2px 8px rgba(245,158,11,0.4);">
         ${activateBtnLabel}
@@ -438,6 +524,82 @@ async function triggerAppInstall() {
   }
 }
 
+let nsSelectedPlan = 'annual';
+
+function buildWhatsAppPayUrl(planKey, hwId, deviceModel, startDateStr) {
+  const planText = planKey === 'monthly'
+    ? `اشتراك شهري (${NS_APP_CONFIG.pricing.monthlyEGP_Ar} / ${NS_APP_CONFIG.pricing.monthlyUSD_Ar})`
+    : `اشتراك سنوي (${NS_APP_CONFIG.pricing.annualEGP_Ar} / ${NS_APP_CONFIG.pricing.annualUSD_Ar})`;
+  const waMsg = encodeURIComponent(
+    `مرحباً أ/ نورهان، قمت بتحويل اشتراك التطبيق عبر InstaPay وأرغب في استلام كود التفعيل.\n` +
+    `• الخطة المختارة: ${planText}\n` +
+    `• بصمة الهاردوير الثابتة: ${hwId}\n` +
+    `• نوع الجهاز: ${deviceModel}\n` +
+    `• تاريخ بداية التجربة: ${startDateStr}`
+  );
+  return `https://wa.me/${NS_APP_CONFIG.whatsappNumber}?text=${waMsg}`;
+}
+
+function selectSubscriptionPlan(planKey) {
+  nsSelectedPlan = planKey;
+  const mCard = document.getElementById('ns-plan-monthly');
+  const aCard = document.getElementById('ns-plan-annual');
+  const mCheck = document.getElementById('ns-check-monthly');
+  const aCheck = document.getElementById('ns-check-annual');
+  const waBtn = document.getElementById('ns-wa-pay-btn');
+
+  if (mCard && aCard) {
+    if (planKey === 'monthly') {
+      mCard.style.border = '2px solid #0f766e';
+      mCard.style.background = '#f0fdfa';
+      aCard.style.border = '1.5px solid #cbd5e1';
+      aCard.style.background = '#ffffff';
+      if (mCheck) mCheck.style.display = 'inline-block';
+      if (aCheck) aCheck.style.display = 'none';
+    } else {
+      aCard.style.border = '2px solid #f59e0b';
+      aCard.style.background = '#fffbeb';
+      mCard.style.border = '1.5px solid #cbd5e1';
+      mCard.style.background = '#ffffff';
+      if (aCheck) aCheck.style.display = 'inline-block';
+      if (mCheck) mCheck.style.display = 'none';
+    }
+  }
+
+  if (waBtn) {
+    const hwId = waBtn.dataset.hwid;
+    const deviceModel = waBtn.dataset.model;
+    const startDateStr = waBtn.dataset.start;
+    waBtn.href = buildWhatsAppPayUrl(planKey, hwId, deviceModel, startDateStr);
+  }
+}
+
+function adminGenerateAndShow(mode) {
+  const idInput = document.getElementById('ns-admin-client-id');
+  const outEl = document.getElementById('ns-admin-out-key');
+  const clientId = (idInput ? idInput.value : '').trim().toUpperCase();
+  if (!clientId) {
+    outEl.innerHTML = '<span style="color:#b91c1c;">⚠️ أدخلي بصمة جهاز العميل أولاً (مثال: HW-A5B52E8F)</span>';
+    return;
+  }
+  let code = '';
+  let label = '';
+  if (mode === 'monthly') {
+    code = generateTimedActivationCode(clientId, 'monthly');
+    label = '📅 كود تفعيل شهري (30 يوم):';
+  } else if (mode === 'annual') {
+    code = generateTimedActivationCode(clientId, 'annual');
+    label = '👑 كود تفعيل سنوي (365 يوم):';
+  } else {
+    code = generateRejectCode(clientId);
+    label = '⛔ كود الحظر النهائي:';
+  }
+  outEl.innerHTML = `
+    <div style="margin-bottom:6px;color:#0f172a;">${label} <code style="background:#fef08a;padding:2px 8px;border-radius:6px;color:#854d0e;font-size:15px;">${code}</code></div>
+    <button onclick="navigator.clipboard.writeText('${code}');alert('تم نسخ الكود: ${code}');" style="background:#0284c7;color:#fff;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;">📋 نسخ الكود للواتساب</button>
+  `;
+}
+
 function openSubscriptionModal(isLocked = false, alertMessage = "", isRejected = false) {
   const old = document.getElementById('ns-pro-modal');
   if (old) old.remove();
@@ -447,13 +609,8 @@ function openSubscriptionModal(isLocked = false, alertMessage = "", isRejected =
   const deviceModel = getDetailedDeviceModel();
   const firstOpen = parseInt(localStorage.getItem('ns_hw_trial_start'), 10);
   const startDateStr = firstOpen ? new Date(firstOpen).toLocaleDateString(isAr ? 'ar-EG' : 'en-US') : (isAr ? 'اليوم' : 'Today');
-
-  const waMsg = encodeURIComponent(
-    `مرحباً أ/ نورهان، قمت بتحويل اشتراك التطبيق عبر InstaPay وأرغب في استلام كود التفعيل.\n` +
-    `• بصمة الهاردوير الثابتة: ${hwId}\n` +
-    `• نوع الجهاز: ${deviceModel}\n` +
-    `• تاريخ بداية التجربة: ${startDateStr}`
-  );
+  nsSelectedPlan = 'annual';
+  const initialWaUrl = buildWhatsAppPayUrl(nsSelectedPlan, hwId, deviceModel, startDateStr);
 
   const modal = document.createElement('div');
   modal.id = 'ns-pro-modal';
@@ -479,26 +636,32 @@ function openSubscriptionModal(isLocked = false, alertMessage = "", isRejected =
         </div>
 
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px;margin-bottom:14px;">
-          <div style="font-weight:800;color:#0f172a;font-size:13.5px;margin-bottom:8px;">${isAr ? '💳 خطط التفعيل والدفع عبر InstaPay:' : '💳 Subscription Plans via InstaPay:'}</div>
+          <div style="font-weight:800;color:#0f172a;font-size:13.5px;margin-bottom:8px;">${isAr ? '💳 اختر خطة الاشتراك للدفع عبر InstaPay:' : '💳 Choose Your Subscription Plan via InstaPay:'}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-            <div style="background:#fff;border:1px solid #cbd5e1;padding:8px;border-radius:10px;text-align:center;">
-              <div style="font-size:11.5px;color:#64748b;font-weight:700;">${isAr ? 'اشتراك سنوي' : 'Annual Plan'}</div>
-              <div style="font-size:14px;font-weight:900;color:#0f766e;">${isAr ? NS_APP_CONFIG.pricing.annualUSD_Ar : NS_APP_CONFIG.pricing.annualUSD}</div>
-              <div style="font-size:11.5px;font-weight:700;color:#d97706;">${isAr ? 'أو ' + NS_APP_CONFIG.pricing.annualEGP_Ar : 'or ' + NS_APP_CONFIG.pricing.annualEGP}</div>
+            <div id="ns-plan-monthly" onclick="selectSubscriptionPlan('monthly')" style="background:#ffffff;border:1.5px solid #cbd5e1;padding:10px 8px;border-radius:12px;text-align:center;cursor:pointer;transition:0.2s;">
+              <div style="font-size:12px;color:#334155;font-weight:800;">
+                ${isAr ? '📅 اشتراك شهري' : '📅 Monthly Plan'}
+                <span id="ns-check-monthly" style="display:none;color:#0f766e;margin-inline-start:4px;">✓</span>
+              </div>
+              <div style="font-size:15px;font-weight:900;color:#0f766e;margin-top:4px;">${isAr ? NS_APP_CONFIG.pricing.monthlyEGP_Ar : NS_APP_CONFIG.pricing.monthlyEGP}</div>
+              <div style="font-size:11.5px;font-weight:700;color:#64748b;">${isAr ? 'أو ' + NS_APP_CONFIG.pricing.monthlyUSD_Ar : 'or ' + NS_APP_CONFIG.pricing.monthlyUSD}</div>
             </div>
-            <div style="background:#fffbeb;border:2px solid #f59e0b;padding:8px;border-radius:10px;text-align:center;">
-              <div style="font-size:11.5px;color:#b45309;font-weight:800;">${isAr ? '⭐ مدى الحياة' : '⭐ Lifetime Plan'}</div>
-              <div style="font-size:14px;font-weight:900;color:#0f766e;">${isAr ? NS_APP_CONFIG.pricing.lifetimeUSD_Ar : NS_APP_CONFIG.pricing.lifetimeUSD}</div>
-              <div style="font-size:11.5px;font-weight:700;color:#d97706;">${isAr ? 'أو ' + NS_APP_CONFIG.pricing.lifetimeEGP_Ar : 'or ' + NS_APP_CONFIG.pricing.lifetimeEGP}</div>
+            <div id="ns-plan-annual" onclick="selectSubscriptionPlan('annual')" style="background:#fffbeb;border:2px solid #f59e0b;padding:10px 8px;border-radius:12px;text-align:center;cursor:pointer;transition:0.2s;">
+              <div style="font-size:12px;color:#b45309;font-weight:800;">
+                ${isAr ? '⭐ اشتراك سنوي (وفر 32%)' : '⭐ Annual (Save 32%)'}
+                <span id="ns-check-annual" style="display:inline-block;color:#b45309;margin-inline-start:4px;">✓</span>
+              </div>
+              <div style="font-size:15px;font-weight:900;color:#0f766e;margin-top:4px;">${isAr ? NS_APP_CONFIG.pricing.annualEGP_Ar : NS_APP_CONFIG.pricing.annualEGP}</div>
+              <div style="font-size:11.5px;font-weight:700;color:#d97706;">${isAr ? 'أو ' + NS_APP_CONFIG.pricing.annualUSD_Ar : 'or ' + NS_APP_CONFIG.pricing.annualUSD}</div>
             </div>
           </div>
 
-          <div style="display:flex;align-items:center;justify-content:space-between;background:#e0f2fe;border:1px solid #bae6fd;padding:8px 12px;border-radius:10px;">
-            <code style="font-size:14px;font-weight:900;color:#0369a1;">${NS_APP_CONFIG.instapayAddress}</code>
-            <button onclick="navigator.clipboard.writeText('${NS_APP_CONFIG.instapayAddress}');alert('${isAr ? 'تم نسخ عنوان InstaPay!' : 'InstaPay address copied!'}');" style="background:#0284c7;color:#fff;border:none;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;">${isAr ? 'نسخ العنوان' : 'Copy IPA'}</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#e0f2fe;border:1px solid #bae6fd;padding:8px 12px;border-radius:10px;gap:8px;">
+            <code style="font-size:13px;font-weight:900;color:#0369a1;word-break:break-all;">${NS_APP_CONFIG.instapayAddress}</code>
+            <button onclick="navigator.clipboard.writeText('${NS_APP_CONFIG.instapayAddress}');alert('${isAr ? 'تم نسخ عنوان InstaPay!' : 'InstaPay address copied!'}');" style="background:#0284c7;color:#fff;border:none;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">${isAr ? 'نسخ العنوان' : 'Copy IPA'}</button>
           </div>
 
-          <a href="https://wa.me/${NS_APP_CONFIG.whatsappNumber}?text=${waMsg}" target="_blank" style="display:block;text-align:center;background:#16a34a;color:#fff;text-decoration:none;padding:9px;border-radius:10px;font-weight:800;font-size:13px;margin-top:10px;">
+          <a id="ns-wa-pay-btn" href="${initialWaUrl}" data-hwid="${hwId}" data-model="${deviceModel.replace(/"/g, '&quot;')}" data-start="${startDateStr}" target="_blank" style="display:block;text-align:center;background:#16a34a;color:#fff;text-decoration:none;padding:9px;border-radius:10px;font-weight:800;font-size:13px;margin-top:10px;">
             ${isAr ? '📲 إرسال إيصال InstaPay وبصمة الجهاز عبر واتساب' : '📲 Send InstaPay Receipt & Device ID via WhatsApp'}
           </a>
         </div>
@@ -506,19 +669,20 @@ function openSubscriptionModal(isLocked = false, alertMessage = "", isRejected =
         <div>
           <label style="display:block;font-size:13px;font-weight:800;color:#0f172a;margin-bottom:6px;">${isAr ? '🔑 أدخل كود التفعيل الخاص ببصمة جهازك:' : '🔑 Enter Activation Code for your Device ID:'}</label>
           <div style="display:flex;gap:8px;">
-            <input id="ns-activation-input" type="text" placeholder="PRO-XXXXXX" style="flex:1;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;font-weight:700;text-align:center;text-transform:uppercase;" />
+            <input id="ns-activation-input" type="text" placeholder="PRM-... / PRY-..." style="flex:1;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;font-family:Cairo,sans-serif;font-size:14px;font-weight:700;text-align:center;text-transform:uppercase;" />
             <button onclick="handleVerifyActivation()" style="background:#0f766e;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-family:Cairo,sans-serif;font-weight:800;font-size:14px;">${isAr ? 'تأكيد' : 'Verify'}</button>
           </div>
 
-          <!-- لوحة الأدمن السرية (تظهر عند كتابة ADMIN2026) لتوليد كود تفعيل أو كود Reject -->
+          <!-- لوحة الأدمن السرية (تظهر عند كتابة ADMIN2026) لتوليد كود شهري أو سنوي أو كود Reject -->
           <div id="ns-secret-admin-panel" style="display:none;margin-top:12px;background:#f1f5f9;border:1.5px dashed #64748b;padding:12px;border-radius:12px;">
-            <div style="font-size:12.5px;font-weight:800;color:#0f172a;margin-bottom:6px;">🛠️ لوحة أ/ نورهان صلاح (تفعيل أو Reject ببصمة الهاردوير):</div>
+            <div style="font-size:12.5px;font-weight:800;color:#0f172a;margin-bottom:6px;">🛠️ لوحة أ/ نورهان صلاح (توليد كود شهري / سنوي / حظر):</div>
             <input id="ns-admin-client-id" type="text" placeholder="أدخلي بصمة جهاز العميل (HW-XXXXXXXX)" style="width:100%;padding:8px;border:1px solid #94a3b8;border-radius:8px;margin-bottom:8px;font-family:Cairo,sans-serif;font-size:13px;box-sizing:border-box;" />
-            <div style="display:flex;gap:8px;">
-              <button onclick="document.getElementById('ns-admin-out-key').innerText = '✅ كود التفعيل: ' + generateActivationCode(document.getElementById('ns-admin-client-id').value)" style="flex:1;background:#15803d;color:#fff;border:none;padding:7px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;">توليد كود تفعيل (PRO)</button>
-              <button onclick="document.getElementById('ns-admin-out-key').innerText = '⛔ كود الحظر النهائي: ' + generateRejectCode(document.getElementById('ns-admin-client-id').value)" style="flex:1;background:#b91c1c;color:#fff;border:none;padding:7px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;">توليد كود رفض (REJECT)</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+              <button onclick="adminGenerateAndShow('monthly')" style="background:#0f766e;color:#fff;border:none;padding:8px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;">📅 كود شهري (30 يوم)</button>
+              <button onclick="adminGenerateAndShow('annual')" style="background:#d97706;color:#fff;border:none;padding:8px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;">👑 كود سنوي (365 يوم)</button>
             </div>
-            <div id="ns-admin-out-key" style="margin-top:8px;font-weight:900;color:#0f172a;font-size:14px;text-align:center;"></div>
+            <button onclick="adminGenerateAndShow('reject')" style="width:100%;background:#b91c1c;color:#fff;border:none;padding:7px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;">⛔ توليد كود حظر نهائي (REJECT)</button>
+            <div id="ns-admin-out-key" style="margin-top:10px;font-weight:900;color:#0f172a;font-size:13.5px;text-align:center;"></div>
           </div>
         </div>
       </div>
@@ -531,11 +695,12 @@ function handleVerifyActivation() {
   const isAr = isAppArabic();
   const val = (document.getElementById('ns-activation-input').value || '').trim().toUpperCase();
   if (val === 'ADMIN2026') {
-    document.getElementById('ns-secret-admin-panel').style.display = 'block';
+    const panel = document.getElementById('ns-secret-admin-panel');
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
     return;
   }
   const hwId = getHardwareFingerprint();
-  const expectedPro = generateActivationCode(hwId);
   const expectedRej = generateRejectCode(hwId);
 
   if (val === expectedRej) {
@@ -545,15 +710,48 @@ function handleVerifyActivation() {
     return;
   }
 
-  if (val === expectedPro) {
+  let matchedPlan = null;
+  let durationDays = 0;
+
+  const timedMatch = val.match(/^(PRM|PRY)-(\d{6})-([A-Z0-9]{6})$/);
+  if (timedMatch) {
+    const prefix = timedMatch[1];
+    const stamp = timedMatch[2];
+    const planType = prefix === 'PRY' ? 'annual' : 'monthly';
+    const expectedCode = generateTimedActivationCode(hwId, planType, stamp);
+    if (val === expectedCode) {
+      let usedCodes = [];
+      try { usedCodes = JSON.parse(localStorage.getItem('ns_smartlab_used_codes') || '[]'); } catch (e) {}
+      if (usedCodes.includes(val)) {
+        alert(isAr ? "⚠️ تم استخدام هذا الكود مسبقاً. يرجى طلب كود تجديد جديد." : "⚠️ This activation code has already been used. Please request a new renewal code.");
+        return;
+      }
+      usedCodes.push(val);
+      localStorage.setItem('ns_smartlab_used_codes', JSON.stringify(usedCodes));
+      matchedPlan = planType;
+      durationDays = planType === 'annual' ? 365 : 30;
+    }
+  }
+
+  if (matchedPlan) {
+    const now = Date.now() + cachedTimeOffset;
+    const prevExpiry = parseInt(localStorage.getItem('ns_smartlab_pro_expiry') || '0', 10);
+    const baseTime = prevExpiry > now ? prevExpiry : now;
+    const newExpiry = baseTime + (durationDays * 24 * 60 * 60 * 1000);
+
     localStorage.removeItem('ns_smartlab_rejected');
     localStorage.setItem('ns_smartlab_pro_activated', hwId);
+    localStorage.setItem('ns_smartlab_pro_plan', matchedPlan);
+    localStorage.setItem('ns_smartlab_pro_expiry', String(newExpiry));
+
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ type: 'ACTIVATE_PRO_OFFLINE' });
     }
+    const planNameAr = matchedPlan === 'annual' ? 'السنوي (365 يوماً)' : 'الشهري (30 يوماً)';
+    const planNameEn = matchedPlan === 'annual' ? 'Annual (365 days)' : 'Monthly (30 days)';
     alert(isAr
-      ? "🎉 تم تفعيل النسخة المدفوعة بنجاح على بصمة جهازك! يعمل التطبيق الآن بدون إنترنت مدى الحياة."
-      : "🎉 Pro Version activated for your device! Full offline mode is now enabled.");
+      ? `🎉 تم تفعيل الاشتراك ${planNameAr} بنجاح على بصمة جهازك!`
+      : `🎉 ${planNameEn} Pro subscription activated for your device!`);
     window.location.reload();
   } else {
     alert(isAr
