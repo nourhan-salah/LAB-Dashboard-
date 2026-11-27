@@ -1,12 +1,13 @@
 // ============================================================================
-// نظام الحماية المتقدم: بصمة الهاردوير الثابتة + عداد تنازلي فعلي 30 يوم + دعم اللغتين (عربي/إنجليزي) + نظام Reject
+// نظام الحماية المتقدم: بصمة الهاردوير الثابتة + عداد تنازلي فعلي 3 أيام + دعم اللغتين (عربي/إنجليزي) + نظام Reject
 // متوافق مع الدليل الذكي والماسح الذكي (تطوير: أ/ نورهان صلاح)
 // ============================================================================
 
 const NS_APP_CONFIG = {
   instapayAddress: "nourhansalahmahmoud@instapay", // ضعي عنوان InstaPay الخاص بك هنا
   whatsappNumber: "201208459828",           // رقم الواتساب لاستلام بصمة ونوع الجهاز
-  trialDays: 30,                            // مدة التجربة المجانية بالأيام (تقل تلقائياً كل يوم حتى 0 ثم يغلق البرنامج)
+  trialDays: 3,                             // مدة التجربة المجانية بالأيام (تقل تلقائياً حتى 0 ثم تظهر شاشة الدفع)
+  trialApiUrl: "https://lab-scanner.norhansalah616.workers.dev/trial", // ربط بصمة الجهاز بسيرفر Cloudflare KV
   secretSalt: "NOURHAN_SALAH_LAB_2026",     // مفتاح التشفير الخاص بك
   // قائمة بصمات الأجهزة المرفوضة نهائياً (أي بصمة تضعينها هنا يقفل عليها التطبيق فوراً حتى لو مسحه ونزله)
   blockedFingerprints: [
@@ -246,7 +247,7 @@ function getActiveProInfo(hwId, nowTs) {
 }
 
 // ============================================================================
-// 2. تخزين تاريخ بداية الـ 30 يوم في عدة طبقات وحساب التناقص التدريجي للأيام
+// 2. تخزين تاريخ بداية الـ 3 أيام في عدة طبقات وحساب التناقص التدريجي للأيام
 // ============================================================================
 async function syncPersistentTrialStart(currentTimestamp) {
   let earliestTime = currentTimestamp;
@@ -345,7 +346,7 @@ function calculateTrialStatus() {
 }
 
 // ============================================================================
-// 3. القفل الكامل للتطبيق (Hard Lock) عند انتهاء الـ 30 يوم أو عمل Reject للجهاز
+// 3. القفل الكامل للتطبيق (Hard Lock) عند انتهاء الـ 3 أيام أو عمل Reject للجهاز
 // ============================================================================
 function executeHardLockScreen(reasonTitleAr, reasonTitleEn, reasonDescAr, reasonDescEn, isRejected = false) {
   const mainEl = document.querySelector('main');
@@ -358,6 +359,23 @@ function executeHardLockScreen(reasonTitleAr, reasonTitleEn, reasonDescAr, reaso
   const isAr = isAppArabic();
   const msg = isAr ? `${reasonTitleAr}: ${reasonDescAr}` : `${reasonTitleEn}: ${reasonDescEn}`;
   openSubscriptionModal(true, msg, isRejected);
+}
+
+async function syncTrialWithServer(hwId) {
+  if (!NS_APP_CONFIG.trialApiUrl) return null;
+  try {
+    const res = await fetch(NS_APP_CONFIG.trialApiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hwId })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && typeof data.firstOpen === "number" && typeof data.serverNow === "number") {
+      return data;
+    }
+  } catch (e) {}
+  return null;
 }
 
 async function initSmartLabProSystem() {
@@ -395,9 +413,17 @@ async function initSmartLabProSystem() {
     return;
   }
 
-  const serverNow = await getAccurateTimestamp();
+  let serverNow = await getAccurateTimestamp();
+  let serverFirstOpen = null;
+  const kvData = await syncTrialWithServer(hwId);
+  if (kvData) {
+    serverNow = kvData.serverNow;
+    serverFirstOpen = kvData.firstOpen;
+  }
   cachedTimeOffset = serverNow - Date.now();
-  cachedFirstOpenTime = await syncPersistentTrialStart(serverNow);
+  const localFirstOpen = await syncPersistentTrialStart(serverFirstOpen || serverNow);
+  cachedFirstOpenTime = serverFirstOpen ? Math.min(localFirstOpen, serverFirstOpen) : localFirstOpen;
+  try { localStorage.setItem('ns_hw_trial_start', String(cachedFirstOpenTime)); } catch (e) {}
 
   updateTopBarAndCheckLock();
 
@@ -425,10 +451,10 @@ function updateTopBarAndCheckLock() {
       );
     } else {
       executeHardLockScreen(
-        "⏳ انتهت الفترة التجريبية المجانية (30 يوماً)",
-        "⏳ 30-Day Free Trial Expired",
-        "تم إغلاق البرنامج تلقائياً لانتهاء فترة الـ 30 يوماً المجانية لهذا الجهاز. يرجى التفعيل عبر InstaPay لإعادة فتح البرنامج.",
-        "The 30-day free trial for this device has ended. Please activate Pro via InstaPay to unlock the application."
+        "⏳ انتهت الفترة التجريبية المجانية (3 أيام)",
+        "⏳ 3-Day Free Trial Expired",
+        "تم إغلاق البرنامج تلقائياً لانتهاء فترة الـ 3 أيام المجانية لهذا الجهاز. يرجى التفعيل عبر InstaPay لإعادة فتح البرنامج.",
+        "The 3-day free trial for this device has ended. Please activate Pro via InstaPay to unlock the application."
       );
     }
   }
